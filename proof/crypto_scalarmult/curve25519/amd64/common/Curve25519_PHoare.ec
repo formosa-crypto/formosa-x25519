@@ -159,7 +159,6 @@ lemma eq_ph_invert (z : zp) :
   phoare[CurveProcedures.invert : fs =  z ==> res = op_invert2 z] = 1%r.
 proof.
     conseq ill_invert (eq_proc_op_invert z). auto => />.
-    smt().
 qed.
 
 (** step 10 : encode point **)
@@ -172,7 +171,6 @@ lemma eq_ph_encode_point (q : zp * zp) :
   phoare[CurveProcedures.encode_point : x2 =  q.`1 /\ z2 = q.`2 ==> res = op_encode_point q] = 1%r.
 proof.
     conseq ill_encode_point (eq_proc_op_encode_point q). auto => />.
-    smt().
 qed.
 
 (** step 11 : scalarmult **)
