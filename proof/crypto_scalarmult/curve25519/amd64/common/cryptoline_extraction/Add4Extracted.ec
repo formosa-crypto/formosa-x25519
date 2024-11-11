@@ -1,21 +1,17 @@
-require import AllCore Int IntDiv CoreMap List Distr. (* useful to include Int import *)
+require import AllCore Int IntDiv CoreMap List Distr.
 
 from Jasmin require import JModel_x86.
 
 import SLH64.
 
-require import Jcheck Ref4_scalarmult_s Zp_limbs Zp_25519.
+require import Jcheck  Zp_limbs Zp_25519.
 import Zp_25519 Zp Zp_limbs EClib.
 
 require import WArray32.
 
 require import Array4.
 
-(* Need to be put into the Jcheck file *)
-
-(* Includes add4.jazz formosa-25519 extraction *)
-
-module MAdd = {
+module M = {
 
   var tmp__check : to_check
   var tmp__data___add4_rrs : (W64.t Array4.t)
@@ -130,7 +126,7 @@ module MAdd = {
 (* All assume are valid. *)
 
 lemma __add4_rrs_assume  :
-      hoare [MAdd.__add4_rrs : true ==> (assume_proof_ res)].
+      hoare [M.__add4_rrs : true ==> (assume_proof_ res)].
 proof.
     proc. do 2! unroll for ^while.
     wp; skip => />. move => &hr.
@@ -140,7 +136,7 @@ qed.
 (* Soundness of assert/assume. *)
 
 lemma __add4_rrs_assert_assume_sound  :
-      hoare [MAdd.__add4_rrs : true ==> (soundness_ res)].
+      hoare [M.__add4_rrs : true ==> (soundness_ res)].
 proof.
     proc.
     do 2! unroll for ^while.
@@ -151,7 +147,7 @@ qed.
 (* Lemmas proved by cryptoline. *)
 
 axiom __add4_rrs_assert (_f  _g: W64.t Array4.t ) :
-      hoare [MAdd.__add4_rrs :
+      hoare [M.__add4_rrs :
       (((_g = g) /\ (_f = f)) /\ true) ==>
       (_assert_spec res
       (eqmod
@@ -165,7 +161,7 @@ axiom __add4_rrs_assert (_f  _g: W64.t Array4.t ) :
 (* Final specification for the functions. *)
 
 lemma __add4_rrs_spec  :
-      forall _f _g, hoare [MAdd.__add4_rrs :
+      forall _f _g, hoare [M.__add4_rrs :
       (((_g = g) /\ (_f = f)) /\ true) ==>
       (eqmod
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
@@ -178,7 +174,7 @@ lemma __add4_rrs_spec  :
 proof.                     
 move => _f _g.
 have h  :
-     hoare [MAdd.__add4_rrs :
+     hoare [M.__add4_rrs :
      (((_g = g) /\ (_f = f)) /\ true) ==>
      (_spec_soundness res
      (eqmod
@@ -191,22 +187,6 @@ have h  :
      (single ((pow 2 255) - 19))))].
 by conseq __add4_rrs_assume (__add4_rrs_assert _f _g).
 conseq h __add4_rrs_assert_assume_sound => // ; smt ().
-qed.
-
-lemma limbs_are_same (f : Rep4) :
-    valRep4 f = (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i f.[ii]))) (iota_ 0 4))).
-proof.
-    rewrite valRep4E /val_digits. 
-    rewrite /to_list /mkseq -iotaredE => />. 
-    smt().
-qed.
-
-lemma inzp_limbs_are_same (f : Rep4) :
-    inzpRep4 f = inzp (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i f.[ii]))) (iota_ 0 4))).
-proof.
-    rewrite inzpRep4E; congr. apply limbs_are_same. 
 qed.
 
 lemma add4_equiv_contract (f g h: Rep4) :

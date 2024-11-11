@@ -17,7 +17,7 @@ lemma h_add_rrs_ref4 (_f _g: zp):
 proof.
     exists* f, g.
     elim * => _ff _gg.
-    conseq __add4_rrs_cryptoline_equiv (: (((g = _gg) /\ (f = _ff)) /\ inzpRep4 _gg = _g /\ inzpRep4 _ff = _f) ==> inzpRep4 _gg = _g /\ inzpRep4 _ff = _f /\
+    conseq __add4_rrs_cryptoline_equiv_ref4 (: (((g = _gg) /\ (f = _ff)) /\ inzpRep4 _gg = _g /\ inzpRep4 _ff = _f) ==> inzpRep4 _gg = _g /\ inzpRep4 _ff = _f /\
       (eqmod
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
