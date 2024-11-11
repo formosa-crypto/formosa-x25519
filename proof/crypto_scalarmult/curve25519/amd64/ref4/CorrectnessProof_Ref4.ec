@@ -1,12 +1,13 @@
-require import Real Bool Int IntDiv.
+require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
-require import Curve25519_Procedures Ref4_scalarmult_s Zp_limbs Zp_25519.
+require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519.
 
 import Zp Ring.IntID.
 
 require import Array4 Array32.
 
 (** hoares, lossless and phoares **)
+
 lemma h_add_rrs_ref4 (_f _g: zp):
   hoare [M.__add4_rrs :
       inzpRep4 f = _f /\ inzpRep4 g = _g
@@ -14,8 +15,20 @@ lemma h_add_rrs_ref4 (_f _g: zp):
       inzpRep4 res = _f + _g
   ].
 proof.
-    proc.
-    admit.
+    exists* f, g.
+    elim * => _ff _gg.
+    conseq __add4_rrs_cryptoline_equiv (: (((g = _gg) /\ (f = _ff)) /\ inzpRep4 _gg = _g /\ inzpRep4 _ff = _f) ==> inzpRep4 _gg = _g /\ inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) +
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _gg.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19)))) __add4_rrs_spec.
+    smt(). rewrite -add4_equiv_contract. smt().
+    proc *. call (__add4_rrs_spec _ff _gg).
+    auto => />.                  
 qed.
 
 lemma h_sub_rrs_ref4 (_f _g: zp):
