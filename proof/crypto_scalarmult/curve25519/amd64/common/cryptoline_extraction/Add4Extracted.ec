@@ -4,7 +4,7 @@ from Jasmin require import JModel_x86.
 
 import SLH64.
 
-require import Jcheck  Zp_limbs Zp_25519.
+require import Jcheck  Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.
 
 require import WArray32.
