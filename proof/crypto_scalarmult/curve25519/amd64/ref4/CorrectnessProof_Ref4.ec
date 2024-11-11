@@ -1,6 +1,7 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
-require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519.
+require import  Add4Extracted Sub4Extracted. (* must be in this order so module names do not clash *)
+require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 Jcheck.
 
 import Zp Ring.IntID.
 
@@ -38,8 +39,20 @@ lemma h_sub_rrs_ref4 (_f _g: zp):
       inzpRep4 res = _f - _g
   ].
 proof.
-    proc.
-    admit.
+    exists* f, gs.
+    elim * => _ff _gg.
+    conseq __sub4_rss_cryptoline_equiv_ref4 (: (((gs = _gg) /\ (f = _ff)) /\ inzpRep4 _gg = _g /\ inzpRep4 _ff = _f) ==> inzpRep4 _gg = _g /\ inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) -
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _gg.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19)))) __add4_rrs_spec.
+    smt(). rewrite -sub4_equiv_contract. smt().
+    proc *. call (__sub4_rrs_spec _ff _gg).
+    auto => />.                  
 qed.
 
 lemma h_mul_a24_ref4 (_f : zp, _a24: int):
@@ -64,18 +77,6 @@ proof.
     admit.
 qed.
 
-
-lemma h_mul_pp_ref4 (_f _g: zp):
-  hoare [M._mul4_pp :
-      inzpRep4 xa = _f /\  inzpRep4 ya = _g
-      ==>
-      inzpRep4 res = _f * _g
-  ].
-proof.
-    proc.
-    admit.
-qed.
-
 lemma h_sqr_rs_ref4 (_f: zp):
   hoare [M.__sqr4_rs :
       inzpRep4 xa = _f
@@ -87,17 +88,6 @@ proof.
     admit.
 qed.
 
-
-lemma h_sqr_p_ref4 (_f: zp):
-  hoare [M._sqr4_p :
-      inzpRep4 xa = _f
-      ==>
-      inzpRep4 res = ZModpRing.exp _f 2
-  ].
-proof.
-    proc.
-    admit.
-qed.
 
 lemma ill_add_rrs_ref4 : islossless M.__add4_rrs.
     by proc; do 2! unroll for ^while; islossless.
@@ -154,21 +144,6 @@ proof.
     by conseq ill_mul_rss_ref4 (h_mul_rss_ref4 _f _g).
 qed.
 
-lemma ill_mul_pp_ref4 : islossless M._mul4_pp.
-proof.
-    proc. inline *.
-    do 9! unroll for ^while. islossless.
-qed.
-
-lemma ph_mul_pp_ref4 (_f _g : zp):
-    phoare [M._mul4_pp :
-      inzpRep4 xa = _f /\  inzpRep4 ya = _g
-      ==>
-      inzpRep4 res = _f * _g] = 1%r.
-proof.
-    by conseq ill_mul_pp_ref4 (h_mul_pp_ref4 _f _g).
-qed.
-
 lemma ill_sqr_rs_ref4 : islossless M.__sqr4_rs
     by proc; inline *; do 2! unroll for ^while; islossless.
 
@@ -179,18 +154,6 @@ lemma ph_sqr_rs_ref4 (_f: zp):
       inzpRep4 res = ZModpRing.exp _f 2] = 1%r.
 proof.
     by conseq ill_sqr_rs_ref4 (h_sqr_rs_ref4 _f).
-qed.
-
-lemma ill_sqr_p_ref4 : islossless M._sqr4_p
-    by proc; inline *; do 3! unroll for ^while; islossless.
-
-lemma ph_sqr_p_ref4 (_f: zp):
-    phoare [M._sqr4_p :
-      inzpRep4 xa = _f
-      ==>
-      inzpRep4 res = ZModpRing.exp _f 2] = 1%r.
-proof.
-    by conseq ill_sqr_p_ref4 (h_sqr_p_ref4 _f).
 qed.
 
 (** step 0 : add sub mul sqr **)
@@ -335,16 +298,55 @@ proof.
     call eq_spec_impl_mul_a24_rs_ref4. skip. auto => />.
 qed.
 
+
+equiv eq_spec_impl_mul_p_rss_ref4 : M._mul4_pp ~ M.__mul4_rss:
+    xa{1} = xa{2} /\ ya{1} = ya{2}
+    ==>
+    res{1} = res{2}.
+proof.
+    proc.
+    do 7! unroll for{1} ^while.
+    do 6! unroll for{2} ^while.    
+    rcondt{1} 22. auto => />. rcondt{2} 22. auto => />. rcondf{1} 35. auto => />. rcondf{2} 35. auto => />.
+    rcondf{1} 27. auto => />. rcondf{2} 27. auto => />. rcondf{1} 36. auto => />. rcondf{2} 36. auto => />.
+    rcondt{1} 60. auto => />. rcondt{2} 60. auto => />. rcondf{1} 68. auto => />. rcondf{2} 68. auto => />.
+    rcondf{1} 79. auto => />. rcondf{2} 79. auto => />. rcondt{1} 72. auto => />. rcondt{2} 72. auto => />.
+    rcondt{1} 84. auto => />. rcondt{2} 84. auto => />. rcondf{1} 92. auto => />. rcondf{2} 92. auto => />.
+    rcondf{1} 96. auto => />. rcondf{2} 96. auto => />. rcondt{1} 108. auto => />. rcondt{2} 108. auto => />.
+    rcondf{1} 116. auto => />. rcondf{2} 116. auto => />. rcondt{1} 120. auto => />. rcondt{2} 120. auto => />.
+    rcondf{1} 128. auto => />. rcondf{2} 128. auto => />. rcondt{1} 132. auto => />. rcondt{2} 132. auto => />.
+    rcondf{1} 140. auto => />. rcondf{2} 140. auto => />. rcondf{1} 144. auto => />. rcondf{2} 144. auto => />.
+    rcondt{1} 156. auto => />. rcondt{2} 156. auto => />. rcondf{1} 164. auto => />. rcondf{2} 164. auto => />.
+    rcondt{1} 168. auto => />. rcondt{2} 168. auto => />. rcondf{1} 176. auto => />. rcondf{2} 176. auto => />.
+    rcondt{1} 180. auto => />. rcondt{2} 180. auto => />. rcondf{1} 188. auto => />. rcondf{2} 188. auto => />.
+    rcondf{1} 192. auto => />. rcondf{2} 192. auto => />.
+    inline *.
+    do 2! unroll for{1} ^while.
+    do 2! unroll for{2} ^while.
+    seq 267 267 : (r{1} = r{2}).
+    sim. wp; skip => />.
+    move => &1 &2.    
+    apply Array4.ext_eq. move => H [H0] H1.
+    smt(Array4.get_setE). 
+qed.
+
 equiv eq_spec_impl_mul_pp_ref4 : CurveProcedures.mul ~ M._mul4_pp:
    f{1} = inzpRep4 xa{2} /\
    g{1} = inzpRep4 ya{2}
     ==>
    res{1} = inzpRep4 res{2}.
 proof.
-    proc *.
-    ecall {2} (ph_mul_pp_ref4 (inzpRep4 xa{2}) (inzpRep4 ya{2})).
-    inline *; wp; skip => />.
-    move => &2 H H0 => />. by rewrite H0.
+    transitivity
+    M.__mul4_rss
+    ( f{1} = inzpRep4 xa{2} /\ g{1} = inzpRep4 ya{2} ==> res{1} = inzpRep4 res{2})
+    ( xa{1} = xa{2} /\ ya{1} = ya{2} ==> res{1} = res{2}).
+    move => &1 &2 H.
+    exists(xa{2}, ya{2}) => />.
+    move => &1 &m &2 H H0. by rewrite -H0 H.
+    proc *; call eq_spec_impl_mul_rss_ref4.
+    by skip => />. symmetry.
+    proc *; call eq_spec_impl_mul_p_rss_ref4.
+    by done.
 qed.
 
 equiv eq_spec_impl_mul_ss_ref4 : CurveProcedures.mul ~ M._mul4_ss_:
@@ -377,6 +379,20 @@ proof.
     sim.
 qed.
 
+equiv eq_spec_impl_sqr_rs__p_ref4 : M._sqr4_p ~ M.__sqr4_rs:
+    xa{1} = xa{2}
+    ==>
+    res{1} = res{2}.
+proof.
+    proc *. inline *.
+    do 3! unroll for{1} ^while.
+    do 2! unroll for{2} ^while.
+    seq 190 190 : (={xa, xa0, r0, r1, z, z0, t}). by sim. 
+    wp. skip => />.
+    move => &2. apply Array4.ext_eq.
+    smt(Array4.get_setE).
+qed.
+
 equiv eq_spec_impl_sqr__ss_ref4 : CurveProcedures.sqr ~ M.__sqr4_ss:
     f{1} = inzpRep4 xa{2}
     ==>
@@ -400,10 +416,17 @@ equiv eq_spec_impl_sqr_p_ref4 : CurveProcedures.sqr ~ M._sqr4_p:
     ==>
     res{1} = inzpRep4 res{2}.
 proof.
-    proc *.
-    ecall {2} (ph_sqr_p_ref4 (inzpRep4 xa{2})).
-    inline *; wp; skip => />.
-    move => &2 H H0 => />. by rewrite H0.
+    transitivity
+    M.__sqr4_rs
+    ( f{1} = inzpRep4 xa{2} ==> res{1} = inzpRep4 res{2})
+    ( xa{1} = xa{2} ==> res{1} = res{2}).
+    move => &1 &2 H.
+    exists(xa{2}) => />.
+    move => &1 &m &2 H H0. by rewrite -H0 H.
+    proc *; call eq_spec_impl_sqr_ref4.
+    by skip => />. symmetry.
+    proc *; call eq_spec_impl_sqr_rs__p_ref4.
+    by done.
 qed.
 
 equiv eq_spec_impl_sqr_ss_ref4 : CurveProcedures.sqr ~ M._sqr4_ss_:
