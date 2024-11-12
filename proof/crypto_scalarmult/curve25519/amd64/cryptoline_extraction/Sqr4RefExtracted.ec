@@ -6,7 +6,10 @@ import SLH64.
 
 require import Jcheck.
 
-require import Array4 Array8.
+require import Array4 Array5 Array8.
+
+require import WArray32 WArray40 WArray64.
+
 
 require import WArray32 WArray64.
 require import Jcheck Zp_limbs Zp_25519 CommonCryptoline.
@@ -16,8 +19,8 @@ module M = {
   var tmp__check : to_check
   var tmp__data___reduce4 : (W64.t Array4.t)
   var tmp____reduce4 : W64.t Array4.t
-  var tmp__data___mul4_rss : (W64.t Array4.t)
-  var tmp____mul4_rss : W64.t Array4.t
+  var tmp__data___sqr4_rs : (W64.t Array4.t)
+  var tmp____sqr4_rs : W64.t Array4.t
   proc __reduce4 (z:W64.t Array8.t) : ((W64.t Array4.t) * to_check) = {
     var aux:bool;
     var aux_1:int;
@@ -167,137 +170,200 @@ module M = {
            (assume___reduce4, assert___reduce4, assume_proof___reduce4,
            assert_proof___reduce4));
   }
-  proc __mul4_rss (xa:W64.t Array4.t, ya:W64.t Array4.t) : ((W64.t Array4.t) *
-                                                           to_check) = {
-    var aux_0:bool;
-    var aux:int;
-    var aux_1:W64.t;
+  proc __sqr4_rs (xa:W64.t Array4.t) : ((W64.t Array4.t) * to_check) = {
+    var aux:bool;
+    var aux_0:W64.t;
     var r:W64.t Array4.t;
-    var i:int;
     var z:W64.t Array8.t;
-    var x:W64.t Array4.t;
-    var j:int;
-    var y:W64.t Array4.t;
-    var h:W64.t;
-    var l:W64.t;
+    var zero:W64.t;
+    var rax:W64.t;
+    var rdx:W64.t;
     var cf:bool;
-    var hprev:W64.t;
-    var assume___mul4_rss:bool;
-    var assert___mul4_rss:bool;
-    var assume_proof___mul4_rss:bool;
-    var assert_proof___mul4_rss:bool;
-    assume___mul4_rss <- true;
-    assert___mul4_rss <- true;
-    assume_proof___mul4_rss <- true;
-    assert_proof___mul4_rss <- assert___mul4_rss;
+    var t:W64.t Array5.t;
+    var assume___sqr4_rs:bool;
+    var assert___sqr4_rs:bool;
+    var assume_proof___sqr4_rs:bool;
+    var assert_proof___sqr4_rs:bool;
+    assume___sqr4_rs <- true;
+    assert___sqr4_rs <- true;
+    assume_proof___sqr4_rs <- true;
+    assert_proof___sqr4_rs <- assert___sqr4_rs;
     r <- witness;
-    x <- witness;
-    y <- witness;
+    t <- witness;
     z <- witness;
-    i <- 2;
-    while ((i < 8)) {
-      z.[i] <- (MOV_64 (W64.of_int 0));
-      i <- (i + 1);
-    }
-    x.[0] <- xa.[0];
-    j <- 0;
-    while ((j < 4)) {
-      y.[j] <- ya.[j];
-      (h, l) <- (mulu_64 y.[j] x.[0]);
-      if ((j = 0)) {
-        z.[0] <- l;
-        z.[1] <- h;
-      } else {
-        (aux_0, aux_1) <- (adc_64 z.[j] l false);
-        cf <- aux_0;
-        z.[j] <- aux_1;
-        (aux_0, aux_1) <- (adc_64 z.[(j + 1)] h cf);
-        cf <- aux_0;
-        z.[(j + 1)] <- aux_1;
-        assert_proof___mul4_rss <-
-        (assert_proof___mul4_rss /\
-        ((assert___mul4_rss /\ assume___mul4_rss) => (! cf)));
-        assert___mul4_rss <- (assert___mul4_rss /\ (! cf));
-        assume_proof___mul4_rss <-
-        (assume_proof___mul4_rss /\
-        ((assert___mul4_rss /\ assume___mul4_rss) => ((b2i cf) = 0)));
-        assume___mul4_rss <- (assume___mul4_rss /\ ((b2i cf) = 0));
-      }
-      j <- (j + 1);
-    }
-    i <- 1;
-    while ((i < 4)) {
-      x.[i] <- xa.[i];
-      j <- 0;
-      while ((j < 4)) {
-        y.[j] <- ya.[j];
-        (h, l) <- (mulu_64 y.[j] x.[i]);
-        (aux_0, aux_1) <- (adc_64 z.[(i + j)] l false);
-        cf <- aux_0;
-        z.[(i + j)] <- aux_1;
-        if ((j = 0)) {
-          hprev <- (MOV_64 (W64.of_int 0));
-          (cf, hprev) <- (adc_64 hprev h cf);
-          assert_proof___mul4_rss <-
-          (assert_proof___mul4_rss /\
-          ((assert___mul4_rss /\ assume___mul4_rss) => (! cf)));
-          assert___mul4_rss <- (assert___mul4_rss /\ (! cf));
-          assume_proof___mul4_rss <-
-          (assume_proof___mul4_rss /\
-          ((assert___mul4_rss /\ assume___mul4_rss) => ((b2i cf) = 0)));
-          assume___mul4_rss <- (assume___mul4_rss /\ ((b2i cf) = 0));
-        } else {
-          (cf, h) <- (adc_64 h (W64.of_int 0) cf);
-          assert_proof___mul4_rss <-
-          (assert_proof___mul4_rss /\
-          ((assert___mul4_rss /\ assume___mul4_rss) => (! cf)));
-          assert___mul4_rss <- (assert___mul4_rss /\ (! cf));
-          assume_proof___mul4_rss <-
-          (assume_proof___mul4_rss /\
-          ((assert___mul4_rss /\ assume___mul4_rss) => ((b2i cf) = 0)));
-          assume___mul4_rss <- (assume___mul4_rss /\ ((b2i cf) = 0));
-          (aux_0, aux_1) <- (adc_64 z.[(i + j)] hprev false);
-          cf <- aux_0;
-          z.[(i + j)] <- aux_1;
-          if (((1 <= j) /\ (j < (4 - 1)))) {
-            hprev <- (MOV_64 (W64.of_int 0));
-            (cf, hprev) <- (adc_64 hprev h cf);
-            assert_proof___mul4_rss <-
-            (assert_proof___mul4_rss /\
-            ((assert___mul4_rss /\ assume___mul4_rss) => (! cf)));
-            assert___mul4_rss <- (assert___mul4_rss /\ (! cf));
-            assume_proof___mul4_rss <-
-            (assume_proof___mul4_rss /\
-            ((assert___mul4_rss /\ assume___mul4_rss) => ((b2i cf) = 0)));
-            assume___mul4_rss <- (assume___mul4_rss /\ ((b2i cf) = 0));
-          } else {
-            (aux_0, aux_1) <- (adc_64 z.[((i + j) + 1)] h cf);
-            cf <- aux_0;
-            z.[((i + j) + 1)] <- aux_1;
-            assert_proof___mul4_rss <-
-            (assert_proof___mul4_rss /\
-            ((assert___mul4_rss /\ assume___mul4_rss) => (! cf)));
-            assert___mul4_rss <- (assert___mul4_rss /\ (! cf));
-            assume_proof___mul4_rss <-
-            (assume_proof___mul4_rss /\
-            ((assert___mul4_rss /\ assume___mul4_rss) => ((b2i cf) = 0)));
-            assume___mul4_rss <- (assume___mul4_rss /\ ((b2i cf) = 0));
-          }
-        }
-        j <- (j + 1);
-      }
-      i <- (i + 1);
-    }
+    z.[7] <- (MOV_64 (W64.of_int 0));
+    zero <- (MOV_64 (W64.of_int 0));
+    rax <- xa.[1];
+    (rdx, rax) <- (mulu_64 rax xa.[0]);
+    z.[1] <- rax;
+    z.[2] <- rdx;
+    rax <- xa.[2];
+    (rdx, rax) <- (mulu_64 rax xa.[1]);
+    z.[3] <- rax;
+    z.[4] <- rdx;
+    rax <- xa.[3];
+    (rdx, rax) <- (mulu_64 rax xa.[2]);
+    z.[5] <- rax;
+    z.[6] <- rdx;
+    rax <- xa.[2];
+    (rdx, rax) <- (mulu_64 rax xa.[0]);
+    (aux, aux_0) <- (adc_64 z.[2] rax false);
+    cf <- aux;
+    z.[2] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[3] rdx cf);
+    cf <- aux;
+    z.[3] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[4] zero cf);
+    cf <- aux;
+    z.[4] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
+    rax <- xa.[3];
+    (rdx, rax) <- (mulu_64 rax xa.[1]);
+    (aux, aux_0) <- (adc_64 z.[4] rax false);
+    cf <- aux;
+    z.[4] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[5] rdx cf);
+    cf <- aux;
+    z.[5] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[6] zero cf);
+    cf <- aux;
+    z.[6] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
+    rax <- xa.[3];
+    (rdx, rax) <- (mulu_64 rax xa.[0]);
+    (aux, aux_0) <- (adc_64 z.[3] rax false);
+    cf <- aux;
+    z.[3] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[4] rdx cf);
+    cf <- aux;
+    z.[4] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[5] zero cf);
+    cf <- aux;
+    z.[5] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[6] zero cf);
+    cf <- aux;
+    z.[6] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[7] zero cf);
+    cf <- aux;
+    z.[7] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
+    (aux, aux_0) <- (adc_64 z.[1] z.[1] false);
+    cf <- aux;
+    z.[1] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[2] z.[2] cf);
+    cf <- aux;
+    z.[2] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[3] z.[3] cf);
+    cf <- aux;
+    z.[3] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[4] z.[4] cf);
+    cf <- aux;
+    z.[4] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[5] z.[5] cf);
+    cf <- aux;
+    z.[5] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[6] z.[6] cf);
+    cf <- aux;
+    z.[6] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[7] z.[7] cf);
+    cf <- aux;
+    z.[7] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
+    rax <- xa.[0];
+    (rdx, rax) <- (mulu_64 rax xa.[0]);
+    z.[0] <- rax;
+    t.[0] <- rdx;
+    rax <- xa.[1];
+    (rdx, rax) <- (mulu_64 rax xa.[1]);
+    t.[1] <- rax;
+    t.[2] <- rdx;
+    rax <- xa.[2];
+    (rdx, rax) <- (mulu_64 rax xa.[2]);
+    t.[3] <- rax;
+    t.[4] <- rdx;
+    (aux, aux_0) <- (adc_64 z.[1] t.[0] false);
+    cf <- aux;
+    z.[1] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[2] t.[1] cf);
+    cf <- aux;
+    z.[2] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[3] t.[2] cf);
+    cf <- aux;
+    z.[3] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[4] t.[3] cf);
+    cf <- aux;
+    z.[4] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[5] t.[4] cf);
+    cf <- aux;
+    z.[5] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[6] (W64.of_int 0) cf);
+    cf <- aux;
+    z.[6] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[7] (W64.of_int 0) cf);
+    cf <- aux;
+    z.[7] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
+    rax <- xa.[3];
+    (rdx, rax) <- (mulu_64 rax xa.[3]);
+    (aux, aux_0) <- (adc_64 z.[6] rax false);
+    cf <- aux;
+    z.[6] <- aux_0;
+    (aux, aux_0) <- (adc_64 z.[7] rdx cf);
+    cf <- aux;
+    z.[7] <- aux_0;
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => (! cf)));
+    assert___sqr4_rs <- (assert___sqr4_rs /\ (! cf));
+    assume_proof___sqr4_rs <-
+    (assume_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) => ((b2i cf) = 0)));
+    assume___sqr4_rs <- (assume___sqr4_rs /\ ((b2i cf) = 0));
     (tmp__data___reduce4, tmp__check) <@ __reduce4 (z);
     tmp____reduce4 <- tmp__data___reduce4;
-    (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-    assert_proof___mul4_rss) <-
+    (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs,
+    assert_proof___sqr4_rs) <-
     (upd_call
-    (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-    assert_proof___mul4_rss) tmp__check);
-    assert_proof___mul4_rss <-
-    (assert_proof___mul4_rss /\
-    ((assert___mul4_rss /\ assume___mul4_rss) =>
+    (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs,
+    assert_proof___sqr4_rs) tmp__check);
+    assert_proof___sqr4_rs <-
+    (assert_proof___sqr4_rs /\
+    ((assert___sqr4_rs /\ assume___sqr4_rs) =>
     (eqmod
     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
     (map (fun ii => ((pow 2 (64 * ii)) * (u64i tmp____reduce4.[ii])))
@@ -305,8 +371,8 @@ module M = {
     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
     (map (fun ii => ((pow 2 (64 * ii)) * (u64i z.[ii]))) (iota_ 0 8)))
     (single ((pow 2 255) - 19)))));
-    assert___mul4_rss <-
-    (assert___mul4_rss /\
+    assert___sqr4_rs <-
+    (assert___sqr4_rs /\
     (eqmod
     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
     (map (fun ii => ((pow 2 (64 * ii)) * (u64i tmp____reduce4.[ii])))
@@ -316,8 +382,8 @@ module M = {
     (single ((pow 2 255) - 19))));
     r <- tmp____reduce4;
     return (r,
-           (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-           assert_proof___mul4_rss));
+           (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs,
+           assert_proof___sqr4_rs));
   }
 }.
 
@@ -333,37 +399,19 @@ proof.
      seq 7 : (assume_proof__ (assume___reduce4, assert___reduce4, assume_proof___reduce4, assert_proof___reduce4)). auto => />. auto => />.
      auto => />.
 qed.
-lemma __mul4_rss_assume  :
-      hoare [M.__mul4_rss : true ==> (assume_proof_ res)].
+
+lemma __sqr4_rs_assume  : hoare [M.__sqr4_rs : true ==> (assume_proof_ res)].
 proof.
-    proc. wp. call __reduce4_assume.
-    seq 8 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). auto => />.
-    unroll for ^while. auto => />. auto => />. auto => />. 
-    seq 14 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). auto => />.
-    seq 2 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />.
-    seq 2 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />. 
-    seq 5 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />.
-    seq 5 : (assume_proof__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. 
-    rcondt ^if. auto => />. rcondf ^if. auto => />. rcondt ^if. auto => />.
-    rcondf ^if. auto => />. rcondt ^if. auto => />. rcondf ^if. auto => />.
-    rcondf ^if. auto => />. auto => />. 
-    unroll for ^while. 
-    rcondt ^if. auto => />. rcondf ^if. auto => />. rcondt ^if. auto => />.
-    rcondf ^if. auto => />. rcondt ^if. auto => />. rcondf ^if. auto => />.
-    rcondf ^if. auto => />. auto => />. 
-    auto => />. 
+    proc. wp.
+    call __reduce4_assume.
+    seq 32: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 15: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 21: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 25: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 38: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 15: ( assume_proof__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. auto => />.
 qed.
-    
+
 (* Soundness of assert/assume. *)
 
 lemma __reduce4_assert_assume_sound  :
@@ -379,37 +427,19 @@ proof.
     auto => />. smt().
 qed.
 
-lemma __mul4_rss_assert_assume_sound  :
-      hoare [M.__mul4_rss : true ==> (soundness_ res)].
+lemma __sqr4_rs_assert_assume_sound  :
+      hoare [M.__sqr4_rs : true ==> (soundness_ res)].
 proof.
-    proc. wp. call __reduce4_assert_assume_sound.        
-    seq 8 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). auto => />.
-    unroll for ^while. auto => />. auto => />. auto => />. 
-    seq 14 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). auto => />.
-    seq 2 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />. smt().
-    seq 2 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />. 
-    seq 5 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. auto => />. smt().
-    seq 5 : (soundness__ (assume___mul4_rss, assert___mul4_rss, assume_proof___mul4_rss,
-      assert_proof___mul4_rss)). 
-    unroll for ^while. 
-    rcondt ^if. auto => />. rcondf ^if. auto => />. rcondt ^if. auto => />.
-    rcondf ^if. auto => />. rcondt ^if. auto => />. rcondf ^if. auto => />.
-    rcondf ^if. auto => />. wp. skip. auto => />. smt().
-    unroll for ^while. 
-    rcondt ^if. auto => />. rcondf ^if. auto => />. rcondt ^if. auto => />.
-    rcondf ^if. auto => />. rcondt ^if. auto => />. rcondf ^if. auto => />.
-    rcondf ^if. auto => />. wp. skip. auto => />. smt(). 
-    auto => />. smt().
+    proc. wp.
+    call __reduce4_assert_assume_sound.
+    seq 32: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />.
+    seq 15: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. smt().
+    seq 21: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. smt().
+    seq 25: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. smt().
+    seq 37: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. smt().
+    seq 16: ( soundness__ (assume___sqr4_rs, assert___sqr4_rs, assume_proof___sqr4_rs, assert_proof___sqr4_rs)). auto => />. smt().
+    wp. skip. auto => />. smt(). 
 qed.
-
 (* Lemmas proved by cryptoline. *)
 
 axiom __reduce4_assert _z :
@@ -423,9 +453,9 @@ axiom __reduce4_assert _z :
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _z.[ii]))) (iota_ 0 8)))
       (single ((pow 2 255) - 19))))].
 
-axiom __mul4_rss_assert _xa _ya :
-      hoare [M.__mul4_rss :
-      (((_ya = ya) /\ (_xa = xa)) /\ true) ==>
+axiom __sqr4_rs_assert _xa :
+      hoare [M.__sqr4_rs :
+      ((_xa = xa) /\ true) ==>
       (_assert_spec res
       (eqmod
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
@@ -433,7 +463,7 @@ axiom __mul4_rss_assert _xa _ya :
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ya.[ii]))) (iota_ 0 4))))
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))))
       (single ((pow 2 255) - 19))))].
 
 (* Final specification for the functions. *)
@@ -462,25 +492,25 @@ have h  :
      (single ((pow 2 255) - 19))))].
 by conseq __reduce4_assume (__reduce4_assert _z).
 conseq h __reduce4_assert_assume_sound => // ; smt ().
-qed.
+qed .
 
-lemma __mul4_rss_spec  :
-      forall _xa _ya,
-      hoare [M.__mul4_rss :
-      (((_ya = ya) /\ (_xa = xa)) /\ true) ==>
+lemma __sqr4_rs_spec  :
+      forall _xa,
+      hoare [M.__sqr4_rs :
+      ((_xa = xa) /\ true) ==>
       (eqmod
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ya.[ii]))) (iota_ 0 4))))
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))))
       (single ((pow 2 255) - 19)))].
 proof.
-move => _xa _ya.
+move => _xa.
 have h  :
-     hoare [M.__mul4_rss :
-     (((_ya = ya) /\ (_xa = xa)) /\ true) ==>
+     hoare [M.__sqr4_rs :
+     ((_xa = xa) /\ true) ==>
      (_spec_soundness res
      (eqmod
      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
@@ -488,22 +518,22 @@ have h  :
      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ya.[ii]))) (iota_ 0 4))))
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))))
      (single ((pow 2 255) - 19))))].
-by conseq __mul4_rss_assume (__mul4_rss_assert _xa _ya).
-conseq h __mul4_rss_assert_assume_sound => // ; smt ().
+by conseq __sqr4_rs_assume (__sqr4_rs_assert _xa).
+conseq h __sqr4_rs_assert_assume_sound => // ; smt ().
 qed .
 
 
-lemma mul4_equiv_contract (xa ya h: Rep4) :
-      inzpRep4 h = inzp (valRep4 xa * valRep4 ya) <=>       
-       (eqmod
+lemma sqr4_equiv_contract (xa h: Rep4) :
+      inzpRep4 h = inzp (valRep4 xa * valRep4 xa) <=>       
+           (eqmod
      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
      (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i ya.[ii]))) (iota_ 0 4))))
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))))
      (single ((pow 2 255) - 19))).
 proof.      
       rewrite -!limbs_are_same.

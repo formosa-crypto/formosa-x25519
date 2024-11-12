@@ -1,6 +1,6 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
-require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted. (* must be in this order so module names do not clash *)
+require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Sqr4RefExtracted. (* must be in this order so module names do not clash *)
 require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 Jcheck.
 
 import Zp Ring.IntID.
@@ -57,21 +57,23 @@ qed.
 
 lemma h_mul_a24_ref4 (_f : zp):
   hoare [M.__mul4_a24_rs :
-      inzpRep4 xa = _f /\ a24 = W64.of_int 121666 
+      inzpRep4 xa = _f /\ W64.to_uint a24 = 121665
       ==>
-      inzpRep4 res = _f * inzp 121666
+      inzpRep4 res = _f * inzp 121665
   ].
 proof.
     exists* xa.
     elim * => _ff.
-    conseq __mul4_a24_rs_cryptoline_equiv_ref4 (: (((xa = _ff)) /\ inzpRep4 _ff = _f) ==>  inzpRep4 _ff = _f /\
+   conseq __mul4_a24_rs_cryptoline_equiv_ref4 (: (((xa = _ff)) /\ inzpRep4 _ff = _f) ==> inzpRep4 _ff = _f /\ 
       (eqmod
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
-      121666) (single ((pow 2 255) - 19)))) __mul4_a24_rs_spec. 
-      smt(). rewrite -mul4_a24_equiv_contract. smt(@Zp_25519).
+      121665) (single ((pow 2 255) - 19)))) __mul4_a24_rs_spec.       
+      auto => />. move => &1 H. exists(xa{1}). auto => />. 
+      smt(@W64).      
+      rewrite -mul4_a24_equiv_contract. smt(@Zp_25519).
       proc *. call (__mul4_a24_rs_spec _ff).
       auto => />.           
 qed.
@@ -106,10 +108,21 @@ lemma h_sqr_rs_ref4 (_f: zp):
       inzpRep4 res = ZModpRing.exp _f 2
   ].
 proof.
-    proc.
-    admit.
+    exists* xa.
+    elim * => _ff.
+    conseq __sqr4_rs_cryptoline_equiv_ref4 (: (((xa = _ff))  /\ inzpRep4 _ff = _f) ==> inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19)))) __sqr4_rs_spec.
+      smt(). rewrite -sqr4_equiv_contract. smt(@Zp_25519).
+      proc *. call (__sqr4_rs_spec _ff).
+      auto => />.           
 qed.
-
 
 lemma ill_add_rrs_ref4 : islossless M.__add4_rrs.
     by proc; do 2! unroll for ^while; islossless.
@@ -141,14 +154,14 @@ qed.
 
 lemma ill_mul_a24_ref4 : islossless M.__mul4_a24_rs by islossless.
 
-lemma ph_mul_a24_ref4 (_f: zp, _a24: int):
+lemma ph_mul_a24_ref4 (_f: zp):
     phoare [M.__mul4_a24_rs :
-      inzpRep4 xa = _f /\  _a24 = to_uint a24
+      inzpRep4 xa = _f /\ W64.to_uint a24 =  121665
       ==>
-      inzpRep4 res = _f * inzp _a24
+      inzpRep4 res = _f * inzp 121665
   ] = 1%r.
 proof.
-    by conseq ill_mul_a24_ref4 (h_mul_a24_ref4 _f _a24).
+    by conseq ill_mul_a24_ref4 (h_mul_a24_ref4 _f). 
 qed.
 
 lemma ill_mul_rss_ref4 : islossless M.__mul4_rss.
@@ -205,14 +218,16 @@ qed.
 
 equiv eq_spec_impl_mul_a24_rs_ref4 : CurveProcedures.mul_a24 ~ M.__mul4_a24_rs:
    f{1} = inzpRep4 xa{2} /\
-   a24{1} = to_uint a24{2}
+   a24{1} = W64.to_uint a24{2} /\
+   a24{1} = 121665
     ==>
    res{1} = inzpRep4 res{2}.
 proof.
     proc *.
-    ecall {2} (ph_mul_a24_ref4 (inzpRep4 xa{2}) (to_uint a24{2})).
+    ecall {2} (ph_mul_a24_ref4 (inzpRep4 xa{2})).
     inline *; wp; skip => />.
-    move => &2 H H0 => />. by rewrite H0.
+    move => &2 H  => />. 
+    move => H0 H1. smt().
 qed.
 
 equiv eq_spec_impl_mul_rss_ref4 : CurveProcedures.mul ~ M.__mul4_rss:
@@ -312,14 +327,15 @@ qed.
 
 equiv eq_spec_impl_mul_a24_ss_ref4 : CurveProcedures.mul_a24 ~ M.__mul4_a24_ss:
    f{1} = inzpRep4 xa{2} /\
-   a24{1} = to_uint a24{2}
-    ==>
+   a24{1} = to_uint a24{2} /\
+   a24{1} = 121665 /\
+   a24{2} = W64.of_int 121665
+   ==>
    res{1} = inzpRep4 res{2}.
 proof.
     proc *. inline{2} (1). wp. sp.
     call eq_spec_impl_mul_a24_rs_ref4. skip. auto => />.
 qed.
-
 
 equiv eq_spec_impl_mul_p_rss_ref4 : M._mul4_pp ~ M.__mul4_rss:
     xa{1} = xa{2} /\ ya{1} = ya{2}
@@ -819,12 +835,12 @@ equiv eq_spec_impl_add_and_double_ref4 :
   res{1}.`3 = inzpRep4 res{2}.`3 /\
   res{1}.`4 = inzpRep4 res{2}.`4.
 proof.
-proc => /=;  wp.
+  proc.
   call eq_spec_impl_mul_rss_ref4; wp.
   call eq_spec_impl_mul_sss_ref4; wp.
   call eq_spec_impl_add_sss_ref4; wp.
   call eq_spec_impl_sqr__ss_ref4; wp.
-  call eq_spec_impl_mul_a24_ss_ref4; wp.
+  call eq_spec_impl_mul_a24_ss_ref4;  wp.
   call eq_spec_impl_sqr__ss_ref4; wp.
   call eq_spec_impl_sub_sss_ref4; wp.
   call eq_spec_impl_mul_sss_ref4; wp.
@@ -837,8 +853,8 @@ proc => /=;  wp.
   call eq_spec_impl_add_sss_ref4; wp.
   call eq_spec_impl_sub_sss_ref4; wp.
   call eq_spec_impl_add_ssr_ref4; wp.
-  call eq_spec_impl_sub_ssr_ref4; wp.
- done.
+  call eq_spec_impl_sub_ssr_ref4; wp. 
+  done.      
 qed.
 
 (** step 6 : montgomery_ladder_step **)

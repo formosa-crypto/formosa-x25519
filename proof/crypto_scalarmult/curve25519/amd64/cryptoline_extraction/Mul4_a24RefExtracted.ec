@@ -42,17 +42,17 @@ module M = {
     assume_proof___mul4_a24_rs <- true;
     assert_proof___mul4_a24_rs <- assert___mul4_a24_rs;
     r <- witness;
-    c <- (W64.of_int 121666);
+    c <- (W64.of_int 121665);
     assert_proof___mul4_a24_rs <-
     (assert_proof___mul4_a24_rs /\
     ((assert___mul4_a24_rs /\ assume___mul4_a24_rs) =>
-    (c = (W64.of_int 121666))));
+    (c = (W64.of_int 121665))));
     assert___mul4_a24_rs <-
-    (assert___mul4_a24_rs /\ (c = (W64.of_int 121666)));
+    (assert___mul4_a24_rs /\ (c = (W64.of_int 121665)));
     assume_proof___mul4_a24_rs <-
     (assume_proof___mul4_a24_rs /\
-    ((assert___mul4_a24_rs /\ assume___mul4_a24_rs) => ((u64i c) = 121666)));
-    assume___mul4_a24_rs <- (assume___mul4_a24_rs /\ ((u64i c) = 121666));
+    ((assert___mul4_a24_rs /\ assume___mul4_a24_rs) => ((u64i c) = 121665)));
+    assume___mul4_a24_rs <- (assume___mul4_a24_rs /\ ((u64i c) = 121665));
     rax <- xa.[0];
     (rdx, rax) <- (mulu_64 rax c);
     r.[0] <- rax;
@@ -155,7 +155,7 @@ axiom __mul4_a24_rs_assert _xa :
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
-      121666) (single ((pow 2 255) - 19))))].
+      121665) (single ((pow 2 255) - 19))))].
 
 (* Final specification for the functions. *)
 
@@ -168,7 +168,7 @@ lemma __mul4_a24_rs_spec  :
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
-      121666) (single ((pow 2 255) - 19)))].
+      121665) (single ((pow 2 255) - 19)))].
 proof.
 move => _xa.
 have h  :
@@ -180,20 +180,20 @@ have h  :
      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _xa.[ii]))) (iota_ 0 4))) *
-     121666) (single ((pow 2 255) - 19))))].
+     121665) (single ((pow 2 255) - 19))))].
 by conseq __mul4_a24_rs_assume (__mul4_a24_rs_assert _xa).
 conseq h __mul4_a24_rs_assert_assume_sound => // ; smt ().
 qed .
 
 
 lemma mul4_a24_equiv_contract (xa h: Rep4) :
-      inzpRep4 h = inzp (valRep4 xa * 121666) <=>       
+      inzpRep4 h = inzp (valRep4 xa * 121665) <=>       
        (eqmod
      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
      (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
-     121666) (single ((pow 2 255) - 19))).
+     121665) (single ((pow 2 255) - 19))).
 proof.      
       rewrite -!limbs_are_same.
       rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
