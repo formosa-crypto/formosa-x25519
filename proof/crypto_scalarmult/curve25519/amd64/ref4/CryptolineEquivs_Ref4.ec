@@ -1,4 +1,4 @@
-require import Ref4_scalarmult_s Jcheck Add4Extracted Sub4Extracted Mul4RefExtracted Int.
+require import Ref4_scalarmult_s Jcheck Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int.
 
 from Jasmin require import JWord.
 
@@ -58,5 +58,17 @@ proof.
     unroll for{1} ^while. unroll for{2} ^while.
     rcondt{1} ^if. auto => />. rcondt{2} ^if. auto => />. sim.
     wp. skip. auto => />.
+qed.
+
+
+lemma __mul4_a24_rs_cryptoline_equiv_ref4  :
+      equiv [Ref4_scalarmult_s.M.__mul4_a24_rs ~ Mul4_a24RefExtracted.M.__mul4_a24_rs : ={xa} /\ a24{1} = W64.of_int 121666 ==> res{1} = res{2}.`1].
+proof.
+    proc. 
+    seq 7 15 : (={r, c, rax, rdx, xa}). auto => />.
+    seq 21 21 : (={r, c, rax, rdx, xa, t1, t2, t3, t4}). auto => />.
+    seq 15 23 : (={r, c, rax, rdx, xa, t1, t2, t3, t4, cf}). auto => />.
+    auto => />. 
+    move => &2. rewrite !addcE !/carry_add !b2i0  => />. 
 qed.
 

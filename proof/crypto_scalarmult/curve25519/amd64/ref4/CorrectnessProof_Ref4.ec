@@ -1,6 +1,6 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
-require import  Add4Extracted Sub4Extracted Mul4RefExtracted. (* must be in this order so module names do not clash *)
+require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted. (* must be in this order so module names do not clash *)
 require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 Jcheck.
 
 import Zp Ring.IntID.
@@ -55,15 +55,25 @@ proof.
     auto => />.                  
 qed.
 
-lemma h_mul_a24_ref4 (_f : zp, _a24: int):
+lemma h_mul_a24_ref4 (_f : zp):
   hoare [M.__mul4_a24_rs :
-      inzpRep4 xa = _f /\  _a24 = to_uint a24
+      inzpRep4 xa = _f /\ a24 = W64.of_int 121666 
       ==>
-      inzpRep4 res = _f * inzp _a24
+      inzpRep4 res = _f * inzp 121666
   ].
 proof.
-    proc.
-    admit.
+    exists* xa.
+    elim * => _ff.
+    conseq __mul4_a24_rs_cryptoline_equiv_ref4 (: (((xa = _ff)) /\ inzpRep4 _ff = _f) ==>  inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
+      121666) (single ((pow 2 255) - 19)))) __mul4_a24_rs_spec. 
+      smt(). rewrite -mul4_a24_equiv_contract. smt(@Zp_25519).
+      proc *. call (__mul4_a24_rs_spec _ff).
+      auto => />.           
 qed.
 
 lemma h_mul_rss_ref4 (_f _g: zp):
