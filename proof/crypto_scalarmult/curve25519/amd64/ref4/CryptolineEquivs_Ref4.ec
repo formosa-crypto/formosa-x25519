@@ -1,4 +1,4 @@
-require import Ref4_scalarmult_s Jcheck Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int Sqr4RefExtracted.
+require import Int Ref4_scalarmult_s Jcheck Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int Sqr4RefExtracted.
 
 from Jasmin require import JWord.
 

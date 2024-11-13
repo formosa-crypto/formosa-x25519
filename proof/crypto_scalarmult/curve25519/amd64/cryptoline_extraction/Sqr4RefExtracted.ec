@@ -10,8 +10,6 @@ require import Array4 Array5 Array8.
 
 require import WArray32 WArray40 WArray64.
 
-
-require import WArray32 WArray64.
 require import Jcheck Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.
 
@@ -523,22 +521,4 @@ have h  :
 by conseq __sqr4_rs_assume (__sqr4_rs_assert _xa).
 conseq h __sqr4_rs_assert_assume_sound => // ; smt ().
 qed .
-
-
-lemma sqr4_equiv_contract (xa h: Rep4) :
-      inzpRep4 h = inzp (valRep4 xa * valRep4 xa) <=>       
-           (eqmod
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
-     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))))
-     (single ((pow 2 255) - 19))).
-proof.      
-      rewrite -!limbs_are_same.
-      rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
-qed.
-
-
 

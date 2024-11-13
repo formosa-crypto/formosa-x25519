@@ -11,7 +11,7 @@ require import Array4.
 require import WArray32.
 
 
-require import WArray32 WArray64.
+
 require import Jcheck Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.
 
@@ -185,16 +185,3 @@ by conseq __mul4_a24_rs_assume (__mul4_a24_rs_assert _xa).
 conseq h __mul4_a24_rs_assert_assume_sound => // ; smt ().
 qed .
 
-
-lemma mul4_a24_equiv_contract (xa h: Rep4) :
-      inzpRep4 h = inzp (valRep4 xa * 121665) <=>       
-       (eqmod
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
-     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
-     121665) (single ((pow 2 255) - 19))).
-proof.      
-      rewrite -!limbs_are_same.
-      rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
-qed.

@@ -26,3 +26,88 @@ lemma inzp_limbs_are_same (f : Rep4) :
 proof.
     rewrite inzpRep4E; congr. apply limbs_are_same. 
 qed.
+
+
+lemma mul4_a24_equiv_contract (xa h: Rep4) :
+      inzpRep4 h = inzp (valRep4 xa * 121665) <=>       
+       (eqmod
+     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
+     121665) (single ((pow 2 255) - 19))).
+proof.      
+      rewrite -!limbs_are_same.
+      rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
+qed.
+
+
+lemma add4_equiv_contract (f g h: Rep4) :
+      inzpRep4 h = inzpRep4 f + inzpRep4 g <=>       
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i f.[ii]))) (iota_ 0 4))) +
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i g.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19))).
+proof.
+      split.
+      rewrite -!limbs_are_same.
+      rewrite inzpRep4E /inzp. smt(@Zp_25519).
+      rewrite -!limbs_are_same.
+      rewrite inzpRep4E /inzp. smt(@Zp_25519).
+qed.
+
+    
+
+lemma mul4_equiv_contract (xa ya h: Rep4) :
+      inzpRep4 h = inzp (valRep4 xa * valRep4 ya) <=>       
+       (eqmod
+     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
+     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i ya.[ii]))) (iota_ 0 4))))
+     (single ((pow 2 255) - 19))).
+proof.      
+      rewrite -!limbs_are_same.
+      rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
+qed.
+
+
+lemma sqr4_equiv_contract (xa h: Rep4) :
+      inzpRep4 h = inzp (valRep4 xa * valRep4 xa) <=>       
+           (eqmod
+     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))) *
+     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i xa.[ii]))) (iota_ 0 4))))
+     (single ((pow 2 255) - 19))).
+proof.      
+      rewrite -!limbs_are_same.
+      rewrite !inzpRep4E !/inzp. smt(@Zp_25519).      
+qed.
+
+
+lemma sub4_equiv_contract (f g h: Rep4) :
+      inzpRep4 h = inzpRep4 f - inzpRep4 g <=>       
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i f.[ii]))) (iota_ 0 4))) -
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i g.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19))).
+proof.
+      split.
+      rewrite -!limbs_are_same.
+      rewrite inzpRep4E /inzp. smt(@Zp_25519).
+      rewrite -!limbs_are_same.
+      rewrite inzpRep4E /inzp. smt(@Zp_25519).
+qed.
