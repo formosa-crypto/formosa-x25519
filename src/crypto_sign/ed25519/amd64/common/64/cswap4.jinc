@@ -1,0 +1,89 @@
+inline fn __cswap4(
+  stack u64[4] x2,
+  stack u64[4] y2,
+  stack u64[4] z2,
+  stack u64[4] t2,
+  stack u64[4] x3,
+  stack u64[4] y3,
+  stack u64[4] z3,
+  stack u64[4] t3,
+  reg   u64    toswap)
+  ->
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4]
+{
+  reg u64[4] temp2 temp3 temp4;
+  reg u64 mask;
+  stack u256[1] mask_s;
+  reg u256 temp_256_1 temp_256_2 temp_256_3 mask_256;
+
+  ?{}, mask = #set0();
+  mask -= toswap; // if toswap == 1 mask = -1 or all bits at 1, 0 otherwise
+
+  // swap between x2r and x3
+  temp2 = #copy(x2);
+  temp3 = #copy(x3);
+  temp4  = #copy(temp2);
+  
+  mask_s[u64 0] = mask;
+  mask_256 = #VPBROADCAST_4u64(mask_s[u64 0]);
+  
+  temp_256_1 = x2[u256 0];
+  temp_256_2 = x3[u256 0];
+  temp_256_3 = x2[u256 0];
+
+	temp_256_3 ^4u64= temp_256_2;
+	temp_256_3 &4u64= mask_256;
+	temp_256_1 ^4u64= temp_256_3;
+	temp_256_2 ^4u64= temp_256_3;
+	
+	x2[u256 0] = temp_256_1;
+	x3[u256 0] = temp_256_2;
+  
+  
+  temp_256_1 = y2[u256 0];
+  temp_256_2 = y3[u256 0];
+  temp_256_3 = y2[u256 0];
+
+	temp_256_3 ^4u64= temp_256_2;
+	temp_256_3 &4u64= mask_256;
+	temp_256_1 ^4u64= temp_256_3;
+	temp_256_2 ^4u64= temp_256_3;
+	
+	y2[u256 0] = temp_256_1;
+	y3[u256 0] = temp_256_2;
+	
+	
+	temp_256_1 = z2[u256 0];
+  temp_256_2 = z3[u256 0];
+  temp_256_3 = z2[u256 0];
+
+	temp_256_3 ^4u64= temp_256_2;
+	temp_256_3 &4u64= mask_256;
+	temp_256_1 ^4u64= temp_256_3;
+	temp_256_2 ^4u64= temp_256_3;
+	
+	z2[u256 0] = temp_256_1;
+	z3[u256 0] = temp_256_2;
+	
+	temp_256_1 = t2[u256 0];
+  temp_256_2 = t3[u256 0];
+  temp_256_3 = t2[u256 0];
+
+	temp_256_3 ^4u64= temp_256_2;
+	temp_256_3 &4u64= mask_256;
+	temp_256_1 ^4u64= temp_256_3;
+	temp_256_2 ^4u64= temp_256_3;
+	
+	t2[u256 0] = temp_256_1;
+	t3[u256 0] = temp_256_2;
+
+  return x2, y2, z2, t2, x3, y3, z3, t3;
+}
+

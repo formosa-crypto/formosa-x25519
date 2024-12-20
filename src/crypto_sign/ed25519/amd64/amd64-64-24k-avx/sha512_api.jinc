@@ -1,0 +1,243 @@
+/*
+State:
+0-15: Buffered message (128 bytes)
+16-23: Internal SHA state (64 bytes)
+24: Input Length (1 byte)
+*/
+
+require "sha512.jinc"
+require "sha512_globals.jinc"
+
+u256[4] _0_4 = {
+	(4u64)[0x0, 0x0, 0x0, 0x0],
+	(4u64)[0x1, 0x1, 0x1, 0x1],
+	(4u64)[0x2, 0x2, 0x2, 0x2],
+	(4u64)[0x3, 0x3, 0x3, 0x3]
+};
+u256 _15x32 = (4u64)[0x0f0f0f0f0f0f0f0f, 0x0f0f0f0f0f0f0f0f, 0x0f0f0f0f0f0f0f0f, 0x0f0f0f0f0f0f0f0f];
+u256 _16x3 = (4u64)[0xff, 0x10, 0x10, 0x10];
+u256 _m1x32 = (4u64)[0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff];
+u256 _0_16x2 = (4u64)[0x0f0e0d0c0b0a0908, 0x0706050403020100, 0x0f0e0d0c0b0a0908, 0x0706050403020100];
+
+inline fn shift_bytes(reg u256[4] m_buf, reg u256 block_offs_256 inv_lane_256 lane_256 mask_256 shift_256)->reg u256[8]
+{
+	reg u256 cond_256 v_256;
+	reg u256[5] m_shuf_buf;
+	reg u256[8] m_shift;
+	inline int i k;
+	
+	m_shuf_buf[4] = #set0_256();
+	for k=3 downto -1
+	{
+		m_shuf_buf[k]	= #VPSHUFB_256(m_buf[k], shift_256);	
+		v_256 = (256u)#VEXTRACTI128(m_shuf_buf[k], 1);
+		v_256 = #VPANDN_256(mask_256, v_256);
+		m_shuf_buf[k+1] |= v_256;
+		v_256 = #VPERM2I128(m_shuf_buf[k], m_shuf_buf[k], 0x0f);
+		m_shuf_buf[k] = #VPBLENDVB_256(v_256, m_shuf_buf[k], mask_256);
+	}
+	
+	v_256 = #VPERM2I128(m_shuf_buf[4], m_shuf_buf[4], 0x01);
+	m_shift[4] = #VPBLENDVB_256(m_shuf_buf[4], v_256, inv_lane_256);
+	
+	for k=3 downto -1
+	{
+		v_256 = #VPERM2I128(m_shuf_buf[k], m_shuf_buf[k], 0x01);
+		m_shift[k] = #VPBLENDVB_256(m_shuf_buf[k], v_256, inv_lane_256);
+		m_shift[k+1] = #VPBLENDVB_256(m_shift[k+1], v_256, lane_256);
+	}
+	
+	m_shift[5] = #set0_256();
+	m_shift[6] = #set0_256();
+	m_shift[7] = #set0_256();
+	
+	v_256 = #set0_256();
+	m_shift[0] = #VPBLENDVB_256(m_shift[0], v_256, lane_256);
+	for k=1 to 4
+	{
+		cond_256 = #VPCMPEQ_4u64(block_offs_256, _0_4[k]);
+		m_shift[4+k]	= #VPBLENDVB_256(m_shift[4+k], m_shift[4], cond_256);
+		m_shift[3+k]	= #VPBLENDVB_256(m_shift[3+k], m_shift[3], cond_256);
+		m_shift[2+k] 	= #VPBLENDVB_256(m_shift[2+k], m_shift[2], cond_256);
+		m_shift[1+k] 	= #VPBLENDVB_256(m_shift[1+k], m_shift[1], cond_256);
+		m_shift[k] 		= #VPBLENDVB_256(m_shift[k], m_shift[0], cond_256);
+		
+		for i=0 to k
+		{
+			m_shift[i] 	= #VPBLENDVB_256(m_shift[i], v_256, cond_256);
+		}
+	}
+	
+	return m_shift;
+}
+
+inline fn sha512_init(stack u64[25] pstate) -> stack u64[25]
+{
+  inline int i;
+  reg ptr u64[8] Hp;
+  reg u256 z v_256;
+
+  Hp = SHA512_H;
+	
+	z = #set0_256();
+  for i=0 to 4
+  {
+  	pstate[u256 i] = z;
+  }
+  for i=0 to 2
+  { v_256 = Hp[u256 i];
+    pstate[u256 4 + i] = v_256; }
+  
+  pstate[24] = 0;
+  
+  return pstate;
+}
+
+#[sct="{ ptr: public, val: { n: d, s:secret } } * public * secret * msf -> { ptr: public, val: { n: d, s:secret } } * msf"]
+inline fn sha512_update_ext(reg ptr u64[25] pstate, reg u64 m, reg u64 inlen, #msf reg u64 msf) -> reg ptr u64[25], #msf reg u64
+{
+	reg u8 cond_8;
+	reg u64 iterations mod_len total_len;
+	reg u64 j;
+	reg u256 block_offs_256 cond_256 inv_lane_256 lane_256 mask_256 modlen_256 shift_256 v_256;
+	reg u256[4] m_buf;
+	reg u256[8] m_shift;
+	stack u64 j_s;
+	reg bool cond neq;
+	inline int k;
+
+	inlen = inlen;
+	// Update len
+	total_len = pstate[24];
+	mod_len = total_len;
+	total_len = total_len + inlen;
+	pstate[24] = total_len;
+	
+	mod_len = mod_len & 0x7f;	
+	modlen_256 = (256u)#VMOV_64(mod_len);
+	modlen_256 = #VPBROADCAST_4u64(modlen_256);
+	
+	block_offs_256 = #VPSRL_4u64(modlen_256, 5);
+		
+	iterations = mod_len + inlen;
+	iterations = iterations >> 7;
+	
+	lane_256 = #VPAND_256(modlen_256, _16x3);
+	lane_256 = #VPCMPEQ_4u64(lane_256, _16x3);
+	lane_256 = #VPERMQ(lane_256, 0xf0);
+	inv_lane_256 = #VPERMQ(lane_256, 0x0f);
+	
+	modlen_256 = #VPBROADCAST_32u8(modlen_256);
+	
+	v_256 = _0_16x2;
+	shift_256 = #VPAND_256(modlen_256, _15x32);
+	shift_256 = #VPSUB_32u8(v_256, shift_256);
+	v_256 = _m1x32;
+	mask_256 = #VPCMPGT_32u8(shift_256, v_256);
+	shift_256 = #VPAND_256(shift_256, _15x32);
+	
+	j = iterations;
+	
+	?{"!=" = neq} = #CMP(j, 0);
+	#declassify cond_8 = #SETcc(neq);
+  cond_8 = #protect_8(cond_8, msf);
+  
+	while {cond = (cond_8 == 1);}(cond) {
+		msf = #update_msf(cond, msf);
+		
+		m = #protect(m, msf);
+		m_buf[0] = (u256)[m];
+		m_buf[1] = (u256)[m + 32];
+		m_buf[2] = (u256)[m + 64];
+		m_buf[3] = (u256)[m + 96];
+		
+		m_shift = shift_bytes(m_buf, block_offs_256, inv_lane_256, lane_256, mask_256, shift_256);
+		
+		for k=0 to 4
+		{
+			cond_256 = #VPCMPGT_32u8(modlen_256, _0_128[k]);
+			m_shift[k] = #VPBLENDVB_256(m_shift[k], pstate[u256 k], cond_256);
+			pstate[u256 k] = #VMOVDQA_256(m_shift[k]);
+		}
+		
+		j_s = j;
+		#update_after_call
+		pstate, msf = _blocks_0_ref(pstate, msf);
+		
+		for k=0 to 4
+		{
+			pstate[u256 k] = #VMOVDQA_256(m_shift[4+k]);
+		}
+		
+		m += 128;
+		j = j_s;
+		j -= 1;
+		
+		?{"!=" = neq} = #CMP(j, 0);
+		#declassify cond_8 = #SETcc(neq);
+  	cond_8 = #protect_8(cond_8, msf);
+	}
+	msf = #update_msf(!cond, msf);
+	
+	m = #protect(m, msf);
+	m_buf[0] = (u256)[m];
+	m_buf[1] = (u256)[m + 32];
+	m_buf[2] = (u256)[m + 64];
+	m_buf[3] = (u256)[m + 96];
+	
+	m_shift = shift_bytes(m_buf, block_offs_256, inv_lane_256, lane_256, mask_256, shift_256);
+	
+	for k=0 to 4
+	{
+		cond_256 = #VPCMPGT_32u8(modlen_256, _0_128[k]);
+		m_shift[k] = #VPBLENDVB_256(m_shift[k], pstate[u256 k], cond_256);
+		pstate[u256 k] = #VMOVDQA_256(m_shift[k]);
+	}	
+
+	return pstate, msf;
+}
+
+#[sct="{ ptr: public, val: { n: d, s:secret } } * { ptr: public, val: { n: d, s:secret } } * msf -> { ptr: public, val: { n: d, s:secret } } * msf"]
+inline fn sha512_finalize(reg ptr u64[25] pstate, reg ptr u64[8] Hreg, #msf reg u64 msf) -> reg ptr u64[8], #msf reg u64
+{
+	#secret reg u64 len mod_len nblocks temp;
+	reg u256 bswap_256 v_256;	
+	#secret stack u8[128] in;
+	#secret stack u64[8] Hs;
+	#secret stack u64[32] sblocks;
+	reg ptr u64[8] Hp;
+  reg ptr u64[32] sblocksp;
+  inline int i;
+	
+	Hp = Hs;
+	
+	for i = 0 to 4{
+		v_256 = #VMOVDQA_256(pstate[u256 i]);
+		in[u256 i] = #VMOVDQA_256(v_256);
+  }
+	
+	len = pstate[24];
+	temp = len;
+	mod_len = len & 0x7f;
+	temp = temp << 3;
+	
+	sblocks, nblocks, msf = __lastblocks_ref(in, mod_len, temp, msf);
+  sblocksp = sblocks;
+  
+  for i=0 to 2{
+		v_256 = #VMOVDQA_256(pstate[u256 4+i]);
+		Hp[u256 i] = #VMOVDQA_256(v_256);
+  }
+  
+  Hp, _, msf = _blocks_1_ref(Hp, sblocksp, nblocks, msf);
+  
+  bswap_256 = bswap_indices;
+  for i=0 to 2
+  { 
+  	v_256 = #VMOVDQA_256(Hp[u256 i]);
+  	v_256 = #VPSHUFB_256(v_256, bswap_256);
+    Hreg[u256 i] = #VMOVDQA_256(v_256);
+  }
+ 
+  return Hreg, msf;
+}

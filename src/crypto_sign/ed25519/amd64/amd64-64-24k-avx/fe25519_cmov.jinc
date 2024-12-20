@@ -1,0 +1,27 @@
+inline fn __cmov4_rsrs(stack u64[4] as, reg u64[4] b, stack u64 wantmont) -> reg u64[4]
+{
+	reg u64[4] a;
+	reg bool e;
+	inline int i;
+	
+	a = #copy(as);
+	?{"==" = e} = #CMP_64(wantmont, 1);
+	
+	for i=0 to 4
+	{
+		a[i] = #CMOVcc(e, b[i], a[i]);
+	}
+	
+	return a;
+}
+
+inline fn __cmov4_ssrs(stack u64[4] as, reg u64[4] b, stack u64 wantmont) -> stack u64[4]
+{
+	reg u64[4] res;
+	stack u64[4] ress;
+	
+	res = __cmov4_rsrs(as, b, wantmont);
+	ress = #copy(res);
+	
+	return ress;
+}

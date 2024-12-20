@@ -1,0 +1,304 @@
+from formosa25519 require "crypto_sign/ed25519/amd64/common/bit.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/init_points4.jinc"
+
+
+from formosa25519 require "crypto_sign/ed25519/amd64/common/decode_scalar.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/decode_u4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/add4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/sub4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/cswap4.jinc"
+
+require "mul4.jinc"
+require "sqr4.jinc"
+require "ge.jinc"
+require "invert4.jinc"
+require "fe25519_cmov.jinc"
+require "fe25519_freeze.jinc"
+require "sc25519_from32bytes.jinc"
+require "decode_point.jinc"
+require "encode_point.jinc"
+
+inline fn __add_and_double4(
+  stack u64[4] x1,
+  stack u64[4] y1,
+  stack u64[4] z1,
+  stack u64[4] t1,
+  stack u64[4] x2,
+  stack u64[4] y2,
+  stack u64[4] z2,
+  stack u64[4] t2)
+  ->
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4]
+{
+  stack u64[4] x3 y3 z3 t3 x4 y4 z4 t4;
+  stack u64[4] x1s y1s z1s;
+  stack u64[4] a b c d e f g h;
+  
+  x1s = #copy(x1);
+  y1s = #copy(y1);
+  z1s = #copy(z1);
+    
+  a = __sub4_sss(y1, x1);
+  b = __sub4_sss(y2, x2);
+  a = __mul4_sss(b, a);
+  
+  b = __add4_sss(y1, x1);
+  c = __add4_sss(y2, x2);
+  b = __mul4_sss(b, c);
+  
+  c = __mul4_a24_ss(t1, 2);
+  d = __mul4_sss(ecd, t2);
+  c = __mul4_sss(c, d);
+  
+  d = __mul4_a24_ss(z1, 2);
+  d = __mul4_sss(d, z2);
+  
+  e = __sub4_sss(b, a);
+  f = __sub4_sss(d, c);
+  g = __add4_sss(d, c);
+  h = __add4_sss(b, a);
+  
+  x4 = __mul4_sss(e, f);
+  y4 = __mul4_sss(g, h);
+  z4 = __mul4_sss(f, g);
+  t4 = __mul4_sss(e, h);
+  
+  
+  a = __sqr4_ss(x1s);
+  b = __sqr4_ss(y1s);
+  c = __sqr4_ss(z1s);
+  c = __mul4_a24_ss(c, 2);
+  
+  h = __add4_sss(a, b);
+  e = __add4_sss(x1s, y1s);
+  e = __sqr4_ss(e);
+  e = __sub4_sss(h, e);
+  g = __sub4_sss(a, b);
+  f = __add4_sss(c, g);
+  
+  x3 = __mul4_sss(e, f);
+  y3 = __mul4_sss(g, h);
+  z3 = __mul4_sss(f, g);
+  t3 = __mul4_sss(e, h);
+  
+  return x3, y3, z3, t3, x4, y4, z4, t4;
+}
+
+inline fn __montgomery_ladder_step4(
+  stack u8[32] k,
+  stack u64[4] x2,
+  stack u64[4] y2,
+  stack u64[4] z2,
+  stack u64[4] t2,
+  stack u64[4] x3,
+  stack u64[4] y3,
+  stack u64[4] z3,
+  stack u64[4] t3,
+  stack u64    swapped,
+  reg   u64    ctr)
+  ->
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64
+{
+  reg u64 toswap bit;
+
+  bit = __ith_bit(k, ctr);
+
+  toswap  = swapped;
+  toswap ^= bit;
+
+  x2, y2, z2, t2, x3, y3, z3, t3 = __cswap4(x2, y2, z2, t2, x3, y3, z3, t3, toswap);
+  swapped = bit;
+
+  x2, y2, z2, t2, x3, y3, z3, t3 = __add_and_double4(x2, y2, z2, t2, x3, y3, z3, t3);
+
+  return x2, y2, z2, t2, x3, y3, z3, t3, swapped;
+}
+
+
+inline fn __montgomery_ladder4(
+  stack u8[32] k,
+  stack u64[4] x3, 
+  stack u64[4] y3,
+  stack u64[4] z3,
+  stack u64[4] t3,
+  #msf reg u64 msf)
+  ->
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  #msf reg u64
+{
+  
+  reg u64 ctr;
+  stack u64 ctrs swapped;
+  stack u64[4] x2 y2 z2 t2; 
+  reg bool cond;
+  #mmx reg u64 msf_s;
+  
+  msf_s = #mov_msf(msf);
+  
+  (x2, y2, z2, t2) = __init_point_inf();
+
+  ctr = 255;
+  swapped = 0;
+
+  while{cond = (ctr >=s 0); msf = #mov_msf(msf_s);}(cond)
+  {	
+  	msf = #update_msf(cond, msf);
+  	msf_s = #mov_msf(msf);
+    ctrs = ctr;
+
+    (x2, y2, z2, t2, x3, y3, z3, t3, swapped) = 
+       __montgomery_ladder_step4(k, x2, y2, z2, t2, x3, y3, z3, t3, swapped, ctr);
+
+    ctr = ctrs;
+    
+    ctr -= 1;
+  }
+  msf = #mov_msf(msf_s);
+	msf = #update_msf(!cond, msf);
+	msf_s = #mov_msf(msf);
+	
+  x2, y2, z2, t2, x3, y3, z3, t3 = __cswap4(x2, y2, z2, t2, x3, y3, z3, t3, swapped);
+  
+  msf = #mov_msf(msf_s);
+  return x2, y2, z2, msf;
+}
+
+
+inline fn __curve25519_internal_mulx(stack u64[4] x3 y3 z3 t3, stack u8[32] k, #msf reg u64 msf) -> reg u64[4], #msf reg u64
+{
+  stack u64[4] x2 y2 z2;
+  reg u64[4] r;
+  
+  (x2, y2, z2, msf) = __montgomery_ladder4(k, x3, y3, z3, t3, msf);
+  r, msf = __encode_point(x2, y2, z2, msf);
+  
+  return r, msf;
+}
+
+inline fn __curve25519_mulx(reg u64[4] _k _u, #msf reg u64 msf) -> reg u64[4], #msf reg u64
+{
+  stack u8[32] k;
+  stack u64[4] us x3 y3 z3 t3;
+  stack u8 valid;
+  reg u64[4] r;
+	
+  k = #copy(_k);
+  us = #copy(_u);
+  
+  x3, y3, z3, t3, valid, msf = __decode_point(us, msf);
+  r, msf = __curve25519_internal_mulx(x3, y3, z3, t3, k, msf);
+	
+  return r, msf;
+}
+
+fn _curve25519_mulx_base(reg u64 k0 k1 k2 k3, #msf reg u64 msf) -> reg u64, reg u64, reg u64, reg u64, #msf reg u64
+{
+	reg u64 r0 r1 r2 r3;
+	reg u64 temp par wantmont;
+	reg u64[4] _k r;
+	reg u64[4] ZplusY ZminusY rx ry rz;
+	stack u64 wantmonts;
+	stack u64[4] rxs rys rzs;
+	stack u64[16] ger;
+	#mmx reg u64 msf_s;
+	
+	msf_s = #mov_msf(msf);
+	
+	_k[0] = k0;
+  _k[1] = k1;
+  _k[2] = k2;
+  _k[3] = k3;
+  
+  _k = sc25519_from32bytes(_k);
+  wantmont = _k[3];
+  wantmont = wantmont >> 63;
+  wantmonts = wantmont;
+  _k[3] &= mask63;
+  
+  msf = #mov_msf(msf_s);
+  ger, msf = __ge25519_scalarmult_base(ger, _k, msf);
+  msf_s = #mov_msf(msf);
+  
+	ry[0] = ger[0];
+	ry[1] = ger[1];
+	ry[2] = ger[2];
+	ry[3] = ger[3];
+	
+	ZplusY = __add4_rsr(ger[8:4], ry);
+	ZminusY = __sub4_rsr(ger[8:4], ry);
+	rys = __cmov4_ssrs(ger[4:4], ZplusY, wantmonts);
+	rz = __cmov4_rsrs(ger[8:4], ZminusY, wantmonts);
+	
+	msf = #mov_msf(msf_s);
+	rz, msf = __invert4(rz, msf);
+  msf_s = #mov_msf(msf);
+  
+	rzs = #copy(rz);
+	
+	rys = __mul4_ssr(rys, rz);
+	
+	rx = __mul4_rss(ger[0:4], rzs);
+  rxs = __freeze4_sr(rx);
+  
+	ry = #copy(rys);
+	r = __fe25519_pack(ry);
+  
+  par = rxs[u64 0];
+  par &= 0x1;
+  
+  temp = 1;
+  temp -= wantmonts;
+  
+  par &= temp;
+  par = par << 63;
+  r[3] ^= par;
+  
+	r0 = r[0];
+	r1 = r[1];
+	r2 = r[2];
+	r3 = r[3];
+	
+	msf = #mov_msf(msf_s);
+  return r0, r1, r2, r3, msf;
+}
+
+inline fn __curve25519_mulx_base(reg u64[4] _k, #msf reg u64 msf) -> reg u64[4], #msf reg u64
+{
+	reg u64 k0 k1 k2 k3;
+	reg u64 r0 r1 r2 r3;
+	reg u64[4] r;
+	
+	k0 = _k[0];
+	k1 = _k[1];
+	k2 = _k[2];
+	k3 = _k[3];
+	
+	#update_after_call
+  r0, r1, r2, r3, msf = _curve25519_mulx_base(k0, k1, k2, k3, msf);
+  
+
+	r[0] = r0;
+	r[1] = r1;
+	r[2] = r2;
+	r[3] = r3;
+	
+  return r, msf;
+}
+

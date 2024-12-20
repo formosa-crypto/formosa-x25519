@@ -1,0 +1,1191 @@
+require "gcd_table.jinc"
+
+inline fn __reduce_x(reg u64[4] a_in) -> reg u64[4]
+{
+	reg u64 t0;
+	reg bool cf;
+	inline int i;
+	
+	// t = MSB(a) * 64
+	t0 = a_in[3];
+	t0 = t0 >>s 63;
+	// a = abs(a)
+	a_in[3] &= mask63;
+	
+	// Reduce below p
+	t0 &= 19;
+	t0 += 19;
+	
+	cf, a_in[0] += t0;
+	for i=1 to 4
+	{
+		cf, a_in[i] += 0 + cf;
+	}
+	
+	t0 = a_in[3];
+	t0 = t0 >>s 63;
+	a_in[3] &= mask63;
+	
+	t0 &= 19;
+	
+	cf, a_in[0] += t0;
+	for i=1 to 4
+	{
+		cf, a_in[i] += 0 + cf;
+	}
+	
+	cf, a_in[0] -= 19;
+	for i=1 to 4
+	{
+		cf, a_in[i] -= 0 - cf;
+	}
+	
+	return a_in;
+}
+
+inline fn __precompute_FVGS(reg u64[4] a) -> stack u256[9]
+{
+	reg u64 t0;
+	stack u256[9] stack_FVGS;
+	reg u256 d1;
+	// Precompute FVGS = f, v, g, s
+	// f = p, v = 0, g = x, s = some mask
+	// 1073741823 = 0x3fffffff
+	d1 = table[u256 9];
+	stack_FVGS[0] = d1;
+	t0 = a[0];
+	t0 &= 1073741823;
+	stack_FVGS[u64 2] = t0;
+	
+	d1 = table[u256 10];
+	stack_FVGS[1] = d1;
+	t0 = a[0];
+	t0 >>= 30;
+	t0 &= 1073741823;
+	stack_FVGS[u64 6] = t0;
+	
+	d1 = table[u256 11];
+	stack_FVGS[2] = d1;
+	_, _, _, _, _, a[0] = #SHRD_64(a[0], a[1], 60);
+	a[0] &= 1073741823;
+	stack_FVGS[u64 10] = a[0];
+	
+	d1 = table[u256 12];
+	stack_FVGS[3] = d1;
+	t0 = a[1];
+	t0 >>= 26;
+	t0 &= 1073741823;
+	stack_FVGS[u64 14] = t0;
+	
+	d1 = table[u256 13];
+	stack_FVGS[4] = d1;
+	_, _, _, _, _, a[1] = #SHRD_64(a[1], a[2], 56);
+	a[1] &= 1073741823;
+	stack_FVGS[u64 18] = a[1];
+	
+	d1 = table[u256 14];
+	stack_FVGS[5] = d1;
+	t0 = a[2];
+	t0 >>= 22;
+	t0 &= 1073741823;
+	stack_FVGS[u64 22] = t0;
+	
+	d1 = table[u256 15];
+	stack_FVGS[6] = d1;
+	_, _, _, _, _, a[2] = #SHRD_64(a[2], a[3], 52);
+	a[2] &= 1073741823;
+	stack_FVGS[u64 26] = a[2];
+	
+	d1 = table[u256 16];
+	stack_FVGS[7] = d1;
+	t0 = a[3];
+	t0 >>= 18;
+	t0 &= 1073741823;
+	stack_FVGS[u64 30] = t0;
+	
+	d1 = table[u256 17];
+	stack_FVGS[8] = d1;
+	a[3] >>= 48;
+	stack_FVGS[u64 34] = a[3];
+	
+	return stack_FVGS;
+}
+
+inline fn divstep(reg u64 grs fuv m z) -> reg u64, reg u64, reg u64  
+{
+	reg u64 oldg h mnew;
+	reg bool l e;
+	
+	oldg = grs;
+	h = #LEA(grs + fuv);
+	?{"==" = e} = #TEST(grs, 1);
+	z = #CMOVcc(!e, m, z);
+	h = #CMOVcc(e, grs, h);
+	mnew = #LEA(m + 1);
+	grs -= fuv;
+	_, _, _, _, _, grs = #SAR(grs, 1);
+	_, _, _, _, _, h = #SAR(h, 1);
+	m = -m;
+	?{"<s" = l} = #CMP(z, 0);
+	fuv = #CMOVcc(!l, oldg, fuv);
+	grs = #CMOVcc(l, h, grs);
+	m = #CMOVcc(l, mnew, m);
+	
+	return grs, fuv, m;
+}
+
+fn __crypto_pow(reg u64[4] x, #msf reg u64 msf) -> reg u64 [4], #msf reg u64
+{
+	reg u64 a4 a5 a6 y0 y1 y2 y3;
+	reg u64 f f0 g g0 h i m mnew r s u v z;
+	reg u64 fuv grs oldg;
+	reg u64 rax rdx;
+	reg u64 rtimesoldv stimesolds;
+	reg u64 _m2p62 _2p20 _m2p41 _m2p20 _2p20a2p41;
+	reg u64[4] a t y;
+	reg u128 uuss_128 vvrr_128;
+	reg u256 carryy carryz vvrr vvrr0 vvrr1 uuss uuss0 uuss1 ta tb out8plus2;
+	reg u256 d0 d1 d0x19 d1x19;
+	reg u256 _19x4 _0_19x4 _32767x4 _inv19_2p30x4 _2p30m1x4 _2p33x4 _2p48x4 _2p63x4 _2p63m2p33x4;
+	reg u256[9] FVGS GSFV;
+	reg u256[10] outplus;
+	reg u256[11] out;
+	stack u64 _m2p62s _2p20s _m2p41s _m2p20s _2p20a2p41s;
+	stack u64[2] m1s;
+	stack u256 _19x4s _0_19x4s _32767x4s _inv19_2p30x4s _2p30m1x4s _2p33x4s _2p48x4s _2p63x4s;
+	stack u256[1] vvrrs uusss fxgxs fygys;
+	stack u256[9] stack_FVGS;
+	reg bool cf e l cond;
+	inline int j k;
+	#mmx reg u64 msf_s;
+	
+	msf_s = #mov_msf(msf);
+	
+	a = #copy(x);
+	a = __reduce_x(a);
+	
+	// Set g to lower 60 bits of a
+	// -2**60 = 0xF0....0
+	t[0] = -1152921504606846976;
+	g = !t[0] & a[0];
+	
+	// Precompute the FVGS values
+	stack_FVGS = __precompute_FVGS(a);
+	
+	// f = lower 60 bits of p, m = delta?
+	f = -19;
+	m = 0;
+	z = -1;
+	
+	// Load constants
+	m1s[0] = m;
+	m1s[1] = z;
+	
+	// -2**62
+	_m2p62 = -4611686018427387904;
+	_m2p62s = _m2p62;
+	
+	// 2**20
+	_2p20 = 1048576;
+	_2p20s = _2p20;
+	
+	// -2**41
+	_m2p41 = -2199023255552;
+	_m2p41s = _m2p41;
+	
+	// -2**20
+	_m2p20 = -1048576;
+	_m2p20s = _m2p20;
+	
+	// 2**20 + 2**41
+	_2p20a2p41 = 2199024304128;
+	_2p20a2p41s = _2p20a2p41;
+	
+	// (19, 19, 19, 19)
+	_19x4 = table[u256 0];
+	_19x4s = _19x4;
+	
+	// (0, 19, 0, 19)
+	_0_19x4 = table[u256 1];
+	_0_19x4s = _0_19x4;
+	
+	// (-1, 32767, -1, 32767)
+	_32767x4 = table[u256 2];
+	_32767x4s = _32767x4;
+	
+	// 19**(-1) % 2**30
+	_inv19_2p30x4 = table[u256 3];
+	_inv19_2p30x4s = _inv19_2p30x4;
+	
+	// 2**30 - 1
+	_2p30m1x4 = table[u256 4];
+	_2p30m1x4s = _2p30m1x4;
+	
+	// 2**33
+	_2p33x4 = table[u256 5];
+	_2p33x4s = _2p33x4;
+	
+	// 2**48
+	_2p48x4 = table[u256 6];
+	_2p48x4s = _2p48x4;
+	
+	// 2**63
+	_2p63x4 = table[u256 7];
+	_2p63x4s = _2p63x4;
+	
+	// 2**63 - 2**33
+	_2p63m2p33x4 = table[u256 8];
+	
+	i = 10;
+	// 2**60
+	u = 1152921504606846976;
+	v = 0;
+	// 2**60, maybe q = s
+	s = u;
+	r = 0;
+	
+	f0 = 0;
+	g0 = 0;
+	
+	
+	
+	// Protect here
+	while{cond = (i != 0); msf = #mov_msf(msf_s);}(cond){
+		// Compute g*((s<<128)+v) + f*((r<<128)+u)
+		// f = Bits 60 to 124, g=t[2] = Bits 128 + 60 to 128+124
+    msf = #update_msf(cond, msf);
+    msf_s = #mov_msf(msf);
+		
+		rax = g;
+		_, _, _, _, _, rdx, rax = #IMUL(rax, s);
+		
+		t[2] = rax;
+		t[1] = rdx;
+		
+		rax = f;
+		_, _, _, _, _, rdx, rax = #IMUL(rax, r);
+		
+		cf, t[2] += rax;
+		_, t[1] += rdx + cf;
+		_, _, _, _, _, t[2] = #SHRD(t[2], t[1], 60);
+		
+		rax = f;
+		_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+		f = rax;
+		t[0] = rdx;
+		
+		rax = g;
+		_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+		cf, f += rax;
+		_, t[0] += rdx + cf;
+		_, _, _, _, _, f = #SHRD(f, t[0], 60);
+		
+		// Insert v and r in vvrr and u and s in uuss
+		vvrr_128 = #set0_128();
+		vvrr_128 = #VPINSR_2u64(vvrr_128, v, 0);
+		vvrr = (256u) #VPINSR_2u64(vvrr_128, r, 1);
+		
+		// f0 = f0*u+g0*v, g0 = g0*s + f0*r
+		// f += f0, g += g0
+		v *= g0;
+		g0 *= s;
+		r *= f0;
+		f0 *= u;
+		f0 += v;
+		g0 += r;
+		
+		f += f0;
+		g = #LEA(t[2] + g0);
+		
+		// Fine till here
+		
+		FVGS[0] = stack_FVGS[0];
+		// Fuv and grs are lower 20 bits of f*u*v and g*r*s Upper 41 / 62 bits are set
+		fuv = ! _m2p20 & f;
+		grs = ! _m2p20 & g;
+		uuss_128 = #set0_128();
+		uuss_128 = #VPINSR_2u64(uuss_128, u, 0);
+		fuv += _m2p41s;
+		grs += _m2p62s;
+		uuss = (256u)#VPINSR_2u64(uuss_128, s, 1);
+		
+		// Set z to -1
+		z = m1s[1];
+		oldg = grs;
+		
+		// Permute, so that vector is uuss/vvrr, then take lower 30 bits of entries in uuss and vvrr
+		// Multipy uuss and vvrr by fvgs and gsfv and add results together
+		// Multipy result by -19 % 2**30 and reduce multipy by 19 and subract from original result
+		// Determine carries
+		
+		// Add grs and fuv and store in h
+		// If grs & 1, z = m and h = grs
+		// m is incremented
+		// Subtract grs by fuv and divide arithmetically result and h by 2
+		// Negate old m
+		// If z is negative, grs = h, m=mnew, else oldg = fuv
+		// z is decremented and oldg is reset to grs
+	
+		GSFV[0] = #VPERMQ(FVGS[0], 0x4e);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		uuss = #VPERMQ(uuss, 0x50);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		vvrr = #VPERMQ(vvrr, 0x50);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_2p30m1x4 = _2p30m1x4s;
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		uuss0 = uuss & _2p30m1x4;
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		vvrr0 = vvrr & _2p30m1x4;
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		ta = #VPMUL_256(uuss0, FVGS[0]);
+		
+		z = -1;
+		oldg = grs;
+		tb = #VPMUL_256(vvrr0, GSFV[0]);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		out[0] = ta +4u64 tb;
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		_inv19_2p30x4 = _inv19_2p30x4s;
+		mnew = #LEA(m + 1);
+		_19x4 = _19x4s;
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		d0 = #VPMUL_256(out[0], _inv19_2p30x4);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		d0 &= _2p30m1x4;
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		d0x19 = #VPMUL_256(d0, _19x4);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = m1s[1];
+		out[0] = #VPSUB_4u64(out[0], d0x19);
+		oldg = grs;
+		carryy = #VPADD_4u64(out[0], _2p63x4s);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		carryy = #VPSRL_4u64(carryy, 30);
+		mnew = #LEA(m + 1);
+		out8plus2 = #VPSLL_4u64(d0, 15);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		FVGS[1] = stack_FVGS[1];
+		m = -m;
+		GSFV[1] = #VPERMQ(FVGS[1], 0x4e);
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		ta = #VPMUL_256(uuss0, FVGS[1]);
+		m = #CMOVcc(l, mnew, m);
+		tb = #VPMUL_256(vvrr0, GSFV[1]);
+		
+		z = -1;
+		oldg = grs;
+		outplus[1] = #VPADD_4u64(ta, tb);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		uuss1 = #VPSRL_4u64(uuss, 30);
+		z = #CMOVcc(!e, m, z);
+		vvrr1 = #VPSRL_4u64(vvrr, 30);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		ta = #VPMUL_256(uuss1, FVGS[0]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		tb = #VPMUL_256(vvrr1, GSFV[0]);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		out[1] = #VPADD_4u64(ta, tb);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		out[1] = #VPADD_4u64(out[1], outplus[1]);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = -1;
+		out[1] = #VPADD_4u64(out[1], carryy);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		d1 = #VPMUL_256(out[1], _inv19_2p30x4);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		d1 &= _2p30m1x4;
+		mnew = #LEA(m + 1);
+		d1x19 = #VPMUL_256(d1, _19x4);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		out[1] = #VPSUB_4u64(out[1], d1x19);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		carryy = #VPADD_4u64(out[1], _2p63m2p33x4);
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		carryy = #VPSRL_4u64(carryy, 30);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = m1s[1];
+		out[9] = #VPSLL_4u64(d1, 15);
+		oldg = grs;
+		FVGS[2] = stack_FVGS[2];
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		GSFV[2] = #VPERMQ(FVGS[2], 0x4e);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		ta = #VPMUL_256(uuss1, FVGS[1]);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		tb = #VPMUL_256(vvrr1, GSFV[1]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		outplus[2] = #VPADD_4u64(ta, tb);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		ta = #VPMUL_256(uuss0, FVGS[2]);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		tb = #VPMUL_256(vvrr0, GSFV[2]);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = m1s[1];
+		out[2] = #VPADD_4u64(ta, tb);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		out[2] = #VPADD_4u64(out[2], outplus[2]);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		out[2] = #VPADD_4u64(out[2], carryy);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		carryy = #VPADD_4u64(out[2], _2p63m2p33x4);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		carryy = #VPSRL_4u64(carryy, 30);
+		_, _, _, _, _, h = #SAR(h, 1);
+		FVGS[3] = stack_FVGS[3];
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		GSFV[3] = #VPERMQ(FVGS[3], 0x4e);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		ta = #VPMUL_256(uuss1, FVGS[2]);
+		tb = #VPMUL_256(vvrr1, GSFV[2]);
+		
+		z = m1s[1];
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		outplus[3] = #VPADD_4u64(ta, tb);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		ta = #VPMUL_256(uuss0, FVGS[3]);
+		mnew = #LEA(m + 1);
+		tb = #VPMUL_256(vvrr0, GSFV[3]);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		out[3] = #VPADD_4u64(ta, tb);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		out[3] = #VPADD_4u64(out[3], outplus[3]);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		out[3] = #VPADD_4u64(out[3], carryy);
+		
+		z = -1;
+		out[2] &= _2p30m1x4;
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		carryy = #VPADD_4u64(out[3], _2p63m2p33x4);
+		?{"==" = e} = #TEST(grs, 1);
+		carryy = #VPSRL_4u64(carryy, 30);
+		
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		out[3] &= _2p30m1x4;
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		stack_FVGS[1] = out[3];
+		_, _, _, _, _, h = #SAR(h, 1);
+		ta = #VPSLL_4u64(out[3], 30);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		ta = #VPADD_4u64(ta, out[2]);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		fxgxs[0] = ta;
+		
+		z = m1s[1];
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		FVGS[4] = stack_FVGS[4];
+		GSFV[4] = #VPERMQ(FVGS[4], 0x4e);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		ta = #VPMUL_256(uuss1, FVGS[3]);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		tb = #VPMUL_256(vvrr1, GSFV[3]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		outplus[4] = #VPADD_4u64(ta, tb);
+		m = -m;
+		ta = #VPMUL_256(uuss0, FVGS[4]);
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		tb = #VPMUL_256(vvrr0, GSFV[4]);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = -1;
+		out[4] = #VPADD_4u64(ta, tb);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		out[4] = #VPADD_4u64(out[4], outplus[4]);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		
+		out[4] = #VPADD_4u64(out[4], carryy);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		carryy = #VPADD_4u64(out[4], _2p63m2p33x4);
+		carryy = #VPSRL_4u64(carryy, 30);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		FVGS[5] = stack_FVGS[5];
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		GSFV[5] = #VPERMQ(FVGS[5], 0x4e);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = -1;
+		ta = #VPMUL_256(uuss1, FVGS[4]);
+		oldg = grs;
+		tb = #VPMUL_256(vvrr1, GSFV[4]);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		outplus[5] = #VPADD_4u64(ta, tb);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		ta = #VPMUL_256(uuss0, FVGS[5]);
+
+		tb = #VPMUL_256(vvrr0, GSFV[5]);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		out[5] = #VPADD_4u64(ta, tb);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		out[5] = #VPADD_4u64(out[5], outplus[5]);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		out[5] = #VPADD_4u64(out[5], carryy);
+		m = #CMOVcc(l, mnew, m);
+		
+		z = m1s[1];
+		carryy = #VPADD_4u64(out[5], _2p63m2p33x4);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		carryy = #VPSRL_4u64(carryy, 30);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		out[5] &= _2p30m1x4;
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		
+		out[4] &= _2p30m1x4;
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		stack_FVGS[2] = out[4];
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		ta = #VPSLL_4u64(out[5], 30);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		ta = #VPADD_4u64(ta, out[4]);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		fygys[0] = ta;
+		
+		z = m1s[1];
+		oldg = grs;
+		FVGS[6] = stack_FVGS[6];
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		GSFV[6] = #VPERMQ(FVGS[6], 0x4e);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		ta = #VPMUL_256(uuss1, FVGS[5]);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		tb = #VPMUL_256(vvrr1, GSFV[5]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		outplus[6] = #VPADD_4u64(ta, tb);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		ta = #VPMUL_256(uuss0, FVGS[6]);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		tb = #VPMUL_256(vvrr0, GSFV[6]);
+		m = #CMOVcc(l, mnew, m);
+
+		z = m1s[1];
+		out[6] = #VPADD_4u64(ta, tb);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		out[6] = #VPADD_4u64(out[6], outplus[6]);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		out[6] = #VPADD_4u64(out[6], carryy);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		carryz = #VPADD_4u64(out[6], _2p63m2p33x4);
+		carryz = #VPSRL_4u64(carryz, 30);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		stack_FVGS[3] = out[5];
+		FVGS[7] = stack_FVGS[7];
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		GSFV[7] = #VPERMQ(FVGS[7], 0x4e);
+		
+		z = m1s[1];
+		ta = #VPMUL_256(uuss1, FVGS[6]);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		tb = #VPMUL_256(vvrr1, GSFV[6]);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		outplus[7] = #VPADD_4u64(ta, tb);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		ta = #VPMUL_256(uuss0, FVGS[7]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		// 
+		tb = #VPMUL_256(vvrr0, GSFV[7]);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		out[7] = #VPADD_4u64(ta, tb);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		grs = #CMOVcc(l, h, grs);
+		out[7] = #VPADD_4u64(out[7], outplus[7]);
+		m = #CMOVcc(l, mnew, m);
+
+		z = m1s[1];
+		out[7] = #VPADD_4u64(out[7], carryz);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		carryz = #VPADD_4u64(out[7], _2p63m2p33x4);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		carryz = #VPSRL_4u64(carryz, 30);
+		h = #CMOVcc(e, grs, h);
+		out[6] &= _2p30m1x4;
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		stack_FVGS[4] = out[6];
+		_, _, _, _, _, h = #SAR(h, 1);
+		FVGS[8] = stack_FVGS[8];
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		GSFV[8] = #VPERMQ(FVGS[8], 0x4e);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		ta = #VPMUL_256(uuss1, FVGS[7]);
+
+		z = -1;
+		oldg = grs;
+		tb = #VPMUL_256(vvrr1, GSFV[7]);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		z = #CMOVcc(!e, m, z);
+		outplus[8] = #VPADD_4u64(ta, tb);
+		h = #CMOVcc(e, grs, h);
+		ta = #VPMUL_256(uuss0, FVGS[8]);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		tb = #VPMUL_256(vvrr0, GSFV[8]);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		out[8] = #VPADD_4u64(ta, tb);
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		out[8] = #VPADD_4u64(out[8], outplus[8]);
+		out[8] = #VPADD_4u64(out[8], carryz);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+
+		z = m1s[1];
+		out[8] = #VPADD_4u64(out[8], out8plus2);
+		oldg = grs;
+		h = #LEA(grs + fuv);
+		carryz = #VPADD_4u64(out[8], _2p63m2p33x4);
+		?{"==" = e} = #TEST(grs, 1);
+		carryz = #VPSRL_4u64(carryz, 30);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		mnew = #LEA(m + 1);
+		out[7] &= _2p30m1x4;
+		grs -= fuv;
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		_, _, _, _, _, h = #SAR(h, 1);
+		stack_FVGS[5] = out[7];
+		m = -m;
+		ta = #VPMUL_256(uuss1, FVGS[8]);
+		?{"<s" = l} = #CMP(z, 0);
+		fuv = #CMOVcc(!l, oldg, fuv);
+		tb = #VPMUL_256(vvrr1, GSFV[8]);
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		outplus[9] = #VPADD_4u64(ta, tb);
+
+		z = m1s[1];
+		oldg = grs;
+		out[9] = #VPADD_4u64(out[9], outplus[9]);
+		h = #LEA(grs + fuv);
+		?{"==" = e} = #TEST(grs, 1);
+		out[9] = #VPADD_4u64(out[9], carryz);
+		z = #CMOVcc(!e, m, z);
+		h = #CMOVcc(e, grs, h);
+		out[10] = #VPADD_4u64(out[9], _2p63m2p33x4);
+		mnew = #LEA(m + 1);
+		grs -= fuv;
+		out[10] = #VPSRL_4u64(out[10], 30);
+		_, _, _, _, _, grs = #SAR(grs, 1);
+		out[8] &= _2p30m1x4;
+		_, _, _, _, _, h = #SAR(h, 1);
+		m = -m;
+		?{"<s" = l} = #CMP(z, 0);
+		stack_FVGS[6] = out[8];
+		fuv = #CMOVcc(!l, oldg, fuv);
+		_32767x4 = _32767x4s;
+		grs = #CMOVcc(l, h, grs);
+		m = #CMOVcc(l, mnew, m);
+		
+		_2p20a2p41 = _2p20a2p41s;
+		s = #LEA(grs + _2p20a2p41);
+		_2p48x4 = _2p48x4s;
+		carryy = #VPADD_4u64(out[10], _2p63m2p33x4);
+		s = s >>s 42;
+		t[2] = g;
+		carryy = #VPSRL_4u64(carryy, 15);
+		g *= s;
+		v = #LEA(fuv + _2p20a2p41);
+		carryy = #VPSUB_4u64(carryy, _2p48x4);
+		v = v >>s 42;
+		t[2] *= v;
+		out[10] = #VPSUB_4u64(out[10], _2p33x4s);
+		_2p20 = _2p20s;
+		r = #LEA(grs + _2p20);
+		out[9] &= _2p30m1x4;
+		r <<= 22;
+		r = r >>s 43;
+		out[10] &= _32767x4;
+		
+		
+		rax = f;
+		rax *= r;
+		carryy = #VPMUL_256(carryy, _0_19x4s);
+		u = #LEA(fuv + _2p20);
+		out[2] = #VPADD_4u64(out[2], carryy);
+		u <<= 22;
+		u = u >>s 43;
+		f *= u;
+		stack_FVGS[7] = out[9];
+		f += t[2];
+		g += rax;
+		stack_FVGS[8] = out[10];
+		f = f >>s 20;
+		stack_FVGS[0] = out[2];
+		g = g >>s 20;
+		
+		// STACK_FVGS and f,g, m are correct
+		
+		vvrrs[u64 0] = v;
+		uusss[u64 0] = u;
+		uusss[u64 2] = s;
+		vvrrs[u64 2] = r;
+		
+		// loop 20
+		fuv = ! _m2p20 & f;
+		grs = ! _m2p20 & g;
+		fuv += _m2p41s;
+		grs += _m2p62s;
+		
+		// loop2
+		for j = 0 to 2
+		{
+			for k=0 to 2{
+				z = -1;
+				grs, fuv, m = divstep(grs, fuv, m, z);
+				
+				z = m1s[1];
+				grs, fuv, m = divstep(grs, fuv, m, z);
+			}
+			
+			for k=0 to 5
+			{
+				z = m1s[1];
+				grs, fuv, m = divstep(grs, fuv, m, z);
+			}
+			
+			z = -1;
+			grs, fuv, m = divstep(grs, fuv, m, z);
+		}
+		
+		// extract
+		_2p20a2p41 = _2p20a2p41s;
+		s = #LEA(grs + _2p20a2p41);
+		_, _, _, _, _, s = #SAR(s, 42);
+		t[2] = g;
+		g *= s;
+		v = #LEA(fuv + _2p20a2p41);
+		_, _, _, _, _, v = #SAR(v, 42);
+		t[2] *= v;
+		
+		_2p20 = _2p20s;
+		r = #LEA(grs + _2p20);
+		r = r << 22;
+		_, _, _, _, _, r = #SAR(r, 43);
+		rax = f;
+		rax *= r;
+		u = #LEA(fuv + _2p20);
+		u = u << 22;
+		_, _, _, _, _, u = #SAR(u, 43);
+		f *= u;
+		
+		f += t[2];
+		g += rax;
+		_, _, _, _, _, f = #SAR(f, 20);
+		_, _, _, _, _, g = #SAR(g, 20);
+		
+		t[0] = uusss[u64 0];
+		t[0] *= u;
+		
+		t[1] = vvrrs[u64 2];
+		t[1] *= v;
+		
+		rtimesoldv = vvrrs[u64 0];
+		u *= rtimesoldv;
+		stimesolds = uusss[u64 2];
+		v *= stimesolds;
+		rtimesoldv *= r;
+		stimesolds *= s;
+		r *= uusss[u64 0];
+		s *= vvrrs[u64 2];
+		v += u;
+		u = #LEA(t[0] + t[1]);
+		r += s;
+		s = #LEA(rtimesoldv + stimesolds);
+		
+		// first_loop
+		vvrrs[u64 0] = v;
+		uusss[u64 0] = u;
+		uusss[u64 2] = s;
+		vvrrs[u64 2] = r;
+
+		fuv = ! _m2p20 & f;
+		grs = ! _m2p20 & g;
+		fuv += _m2p41s;
+		grs += _m2p62s;
+		
+		// loop2
+		for j = 0 to 2
+		{
+			for k=0 to 2{
+				z = -1;
+				grs, fuv, m = divstep(grs, fuv, m, z);
+				
+				z = m1s[1];
+				grs, fuv, m = divstep(grs, fuv, m, z);
+			}
+			
+			for k=0 to 5
+			{
+				z = m1s[1];
+				grs, fuv, m = divstep(grs, fuv, m, z);
+			}
+			
+			z = -1;
+			grs, fuv, m = divstep(grs, fuv, m, z);
+		}
+		
+		_2p20a2p41 = _2p20a2p41s;
+		s = #LEA(grs + _2p20a2p41);
+		_, _, _, _, _, s = #SAR(s, 42);
+		v = #LEA(fuv + _2p20a2p41);
+		_, _, _, _, _, v = #SAR(v, 42);
+		t[1] = vvrrs[u64 2];
+		t[1] *= v;
+		stimesolds = uusss[u64 2];
+		v *= stimesolds;
+		stimesolds *= s;
+		
+		 _2p20 = _2p20s;
+		r = #LEA(grs + _2p20);
+		r = r << 22;
+		_, _, _, _, _, r = #SAR(r, 43);
+		rax = f;
+		rax *= r;
+		u = #LEA(fuv + _2p20);
+		u = u << 22;
+		_, _, _, _, _, u = #SAR(u, 43);
+		
+		t[0] = uusss[u64 0];
+		t[0] *= u;
+		rtimesoldv = vvrrs[u64 0];
+		u *= rtimesoldv;
+		rtimesoldv *= r;
+		s *= vvrrs[u64 2];
+		r *= uusss[u64 0];
+		v += u;
+		u = #LEA(t[0] + t[1]);
+		r += s;
+		s = #LEA(rtimesoldv + stimesolds);
+		
+		f = fxgxs[u64 0];
+		g = fxgxs[u64 2];
+		f0 = fygys[u64 0];
+		g0 = fygys[u64 2];
+		
+		i -= 1;
+	}
+  msf = #update_msf(!cond, msf);
+  msf_s = #mov_msf(msf);
+	
+	
+	f0 <<= 60;
+	g0 <<= 60;
+	f += f0;
+	g += g0;
+	f *= u;
+	g *= v;
+	t[0] = #LEA(f + g);
+	t[0] = t[0] >>s 60;
+	u *= t[0];
+	v *= t[0];
+	
+	// cneg
+	rax = stack_FVGS[u64 8*4 + 1];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+	a4 = rdx;
+	y[3] = rax;
+	
+	rax = stack_FVGS[u64 8*4 + 3];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+	cf, y[3] += rax;
+	_, a4 += rdx + cf;
+	_, _, _, _, _, a4 = #SHLD_64(a4, y[3], 48);
+	y[3] <<= 48;
+	
+	rax = stack_FVGS[u64 6*4 + 1];
+	t[0] = stack_FVGS[u64 7*4 + 1];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+	t[2] = rdx;
+	t[1] = rax;
+	
+	rax = stack_FVGS[u64 6*4 + 3];
+	t[0] = stack_FVGS[u64 7*4 + 3];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+	cf, t[1] += rax;
+	_, t[2] += rdx + cf;
+	
+	y[2] = t[1];
+	_, _, _, _, _, t[1] = #SHRD_64(t[1], t[2], 12);
+	y[2] <<= 52;
+	t[2] = t[2] >>s 12;
+	cf, y[3] += t[1];
+	_, a4 += t[2] + cf;
+	
+	rax = stack_FVGS[u64 4*4 + 1];
+	t[0] = stack_FVGS[u64 5*4 + 1];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+	t[2] = rdx;
+	t[1] = rax;
+	
+	rax = stack_FVGS[u64 4*4 + 3];
+	t[0] = stack_FVGS[u64 5*4 + 3];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+	cf, t[1] += rax;
+	_, t[2] += rdx + cf;
+	
+	y[1] = t[1];
+	_, _, _, _, _, t[1] = #SHRD_64(t[1], t[2], 8);
+	y[1] <<= 56;
+	h = t[2];
+	t[2] = t[2] >>s 8;
+	h = h >>s 63;
+	cf, y[2] += t[1];
+	cf, y[3] += t[2] + cf;
+	_, a4 += h + cf;
+	
+	rax = stack_FVGS[u64 2*4 + 1];
+	t[0] = stack_FVGS[u64 3*4 + 1];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+	t[2] = rdx;
+	t[1] = rax;
+	
+	rax = stack_FVGS[u64 2*4 + 3];
+	t[0] = stack_FVGS[u64 3*4 + 3];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+	cf, t[1] += rax;
+	_, t[2] += rdx + cf;
+	
+	y[0] = t[1];
+	_, _, _, _, _, t[1] = #SHRD_64(t[1], t[2], 4);
+	y[0] <<= 60;
+	h = t[2];
+	t[2] = t[2] >>s 4;
+	h = h >>s 63;
+	cf, y[1] += t[1];
+	cf, y[2] += t[2] + cf;
+	cf, y[3] += h + cf;
+	_, a4 += h + cf;
+	
+	rax = stack_FVGS[u64 0*4 + 1];
+	t[0] = stack_FVGS[u64 1*4 + 1];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, u);
+	t[2] = rdx;
+	t[1] = rax;
+	
+	rax = stack_FVGS[u64 0*4 + 3];
+	t[0] = stack_FVGS[u64 1*4 + 3];
+	t[0] <<= 30;
+	rax += t[0];
+	_, _, _, _, _, rdx, rax = #IMUL(rax, v);
+	cf, t[1] += rax;
+	_, t[2] += rdx + cf;
+	
+	h = t[2];
+	h = h >>s 63;
+	cf, y[0] += t[1];
+	cf, y[1] += t[2] + cf;
+	cf, y[2] += h + cf;
+	cf, y[3] += h + cf;
+	_, a4 += h + cf;
+	
+	cf = #BT(y[3], 63);
+	_, a4 += a4 + cf;
+	y[3] &= mask63;
+	
+	h = a4;
+	rax = 19;
+	_, _, _, _, _, rdx, rax = #IMUL(rax, a4);
+	h = h >>s 63;
+	a4 = 0;
+	
+	cf, y[0] += rax;
+	cf, y[1] += rdx + cf;
+	cf, y[2] += h + cf;
+	cf, y[3] += h + cf;
+	_, a4 += h + cf;
+	
+	cf = #BT(y[3], 63);
+	_, a4 += a4 + cf;
+	y[3] &= mask63;
+	
+	h = a4;
+	rax = 19;
+	_, _, _, _, _, rdx, rax = #IMUL(rax, a4);
+	h = h >>s 63;
+	
+	cf, y[0] += rax;
+	cf, y[1] += rdx + cf;
+	cf, y[2] += h + cf;
+	cf, y[3] += h + cf;
+	_, a4 += h + cf;
+	
+	z = 0;
+	a4 = -19;
+	a5 = -1;
+	a6 = 0x7fffffffffffffff;
+	?{"<s" = l} = #CMP(y[3], 0);
+	a4 = #CMOVcc(!l, z, a4);
+	a5 = #CMOVcc(!l, z, a5);
+	a6 = #CMOVcc(!l, z, a6);
+	
+	cf, y[0] += a4;
+	cf, y[1] += a5 + cf;
+	cf, y[2] += a5 + cf;
+	_, y[3] += a6 + cf;
+	
+	cf, y[0] += 19;
+	cf, y[1] += 0 + cf;
+	cf, y[2] += 0 + cf;
+	_, y[3] += 0 + cf;
+	
+	t[0] = y[3];
+	t[0] = t[0] >>s 63;
+	
+	y[3] &= mask63;
+	
+	t[0] &= 19;
+	cf, y[0] += t[0];
+	cf, y[1] += 0 + cf;
+	cf, y[2] += 0 + cf;
+	_, y[3] += 0 + cf;
+	
+	cf, y[0] -= 19;
+	cf, y[1] -= 0 - cf;
+	cf, y[2] -= 0 - cf;
+	_, y[3] -= 0 - cf;
+	
+	y0 = y[0];
+	y1 = y[1];
+	y2 = y[2];
+	y3 = y[3];
+	
+	msf = #mov_msf(msf_s);
+	
+	return y, msf;
+}

@@ -1,0 +1,152 @@
+require "ge25519_base_niels_256.jinc"
+
+inline fn init_r(reg u64 b) -> stack u64[19]
+{	
+	reg u64 mask pos subt0 subt1 u;
+	reg u128 b_128 u_128;
+	reg u256 b_256 p_256 u_256 t_256 tt_256;
+	reg u256 tt2d txaddy tysubx;
+	reg u256 cmp_1 cmp_2 cmp_3 cmp_4 cmp_5 cmp_6 cmp_7 cmp_8;
+	reg u64[4] txaddyr tysubxr;
+	stack u64[4] tt2ds txaddys txaddys2 tysubxs;
+	stack u64[19] r;
+	reg ptr u256[1536] _basep;
+	reg bool cf;
+	
+	_basep = basep;
+	
+	pos = 0;
+	
+	mask = b;
+	mask >>s= 7;
+	
+	u = b;
+	u += mask;
+	u ^= mask;
+	
+	tysubx = _1[u256 0];
+	txaddy = _1[u256 0];
+	tt2d =  #set0_256();
+	
+	u_128 = #set0_128();
+	u_256 = (256u)#VPINSR_2u64(u_128, u, 0);
+	u_256 = #VPBROADCAST_4u64(u_256);
+	cmp_1 = #VPCMPEQ_4u64(u_256, v1234[u256 0]);
+	cmp_5 = #VPCMPEQ_4u64(u_256, v5678[u256 0]);
+	
+	cmp_2 = #VPERMQ(cmp_1, 0x55);
+	cmp_6 = #VPERMQ(cmp_5, 0x55);
+	cmp_3 = #VPERMQ(cmp_1, 0xaa);
+	cmp_7 = #VPERMQ(cmp_5, 0xaa);
+	cmp_4 = #VPERMQ(cmp_1, 0xff);
+	cmp_8 = #VPERMQ(cmp_5, 0xff);
+	cmp_1 = #VPERMQ(cmp_1, 0x00);
+	cmp_5 = #VPERMQ(cmp_5, 0x00);
+	
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[0], cmp_1);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*1], cmp_1);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*2], cmp_1);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*3], cmp_2);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*4], cmp_2);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*5], cmp_2);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*6], cmp_3);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*7], cmp_3);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*8], cmp_3);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*9], cmp_4);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*10], cmp_4);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*11], cmp_4);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*12], cmp_5);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*13], cmp_5);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*14], cmp_5);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*15], cmp_6);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*16], cmp_6);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*17], cmp_6);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*18], cmp_7);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*19], cmp_7);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*20], cmp_7);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[32*21], cmp_8);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[32*22], cmp_8);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[32*23], cmp_8);
+	
+	b_128 = #set0_128();
+	b_256 = (256u)#VPINSR_2u64(b_128, b, 0);
+	b_256 = #VPBROADCAST_4u64(b_256);
+	
+	b_256 = #VPSRA_8u32(b_256, 31);
+	t_256 = tysubx;
+	tysubx = #VPBLENDVB_256(tysubx, txaddy, b_256);
+	txaddy = #VPBLENDVB_256(txaddy, t_256, b_256);
+	
+	txaddys2[u256 0] = txaddy;
+	tysubxs[u256 0] = tysubx;
+	txaddys[u256 0] = txaddy;
+
+	p_256 = p[u256 0];
+	tt_256 = #VPSUB_4u64(p_256, tt2d);
+	
+	tt2d = #VPBLENDVB_256(tt2d, tt_256, b_256);
+	tt2ds[u256 0] = tt2d;
+	
+	txaddyr = #copy(txaddys);
+	tysubxr = #copy(tysubxs);
+	
+	cf, txaddyr[0] -= tysubxr[0];
+	cf, txaddyr[1] -= tysubxr[1] - cf;
+	cf, txaddyr[2] -= tysubxr[2] - cf;
+	cf, txaddyr[3] -= tysubxr[3] - cf;
+
+	subt0 = 0;
+	subt1 = 38;
+	subt1 = #CMOVcc_64(!cf, subt0, subt1);
+	
+	cf, txaddyr[0] -= subt1;
+	cf, txaddyr[1] -= subt0 - cf;
+	cf, txaddyr[2] -= subt0 - cf;
+	cf, txaddyr[3] -= subt0 - cf;
+	
+	subt0 = #CMOVcc_64(cf, subt1, subt0);
+	txaddyr[0] -= subt0;
+
+	r[0] = txaddyr[0];
+	r[1] = txaddyr[1];
+	r[2] = txaddyr[2];
+	r[3] = txaddyr[3];
+	r[4] = 0;
+	
+	cf, tysubxr[0] += txaddys2[0];
+	cf, tysubxr[1] += txaddys2[1] + cf;
+	cf, tysubxr[2] += txaddys2[2] + cf;
+	cf, tysubxr[3] += txaddys2[3] + cf;
+	
+	subt0 = 0;
+	subt1 = 38;
+	subt1 = #CMOVcc_64(!cf, subt0, subt1);
+	
+	cf, tysubxr[0] += subt1;
+	cf, tysubxr[1] += subt0 + cf;
+	cf, tysubxr[2] += subt0 + cf;
+	cf, tysubxr[3] += subt0 + cf;
+	
+	subt0 = #CMOVcc_64(cf, subt1, subt0);
+	tysubxr[0] += subt0;
+
+	r[5] = tysubxr[0];
+	r[6] = tysubxr[1];
+	r[7] = tysubxr[2];
+	r[8] = tysubxr[3];
+	r[9] = 0;
+	
+	
+	r[15] = tt2ds[0];
+	r[16] = tt2ds[1];
+	r[17] = tt2ds[2];
+	r[18] = tt2ds[3];
+	
+	r[10] = 2;
+  r[11] = 0;
+  r[12] = 0;
+  r[13] = 0;
+  r[14] = 0;
+
+	return r;
+}

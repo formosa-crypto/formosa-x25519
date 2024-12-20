@@ -1,0 +1,74 @@
+inline fn _cmp4_rr(reg u64 a0 a1 a2 a3 b0 b1 b2 b3) -> reg u8
+{
+	inline int i;
+	reg u64[4] a b;
+	reg u16 res16 one m1;
+	reg u8 res ;
+	reg bool c;
+	
+	a[0] = a0;
+	a[1] = a1;
+	a[2] = a2;
+	a[3] = a3;
+	
+	b[0] = b0;
+	b[1] = b1;
+	b[2] = b2;
+	b[3] = b3;
+	
+	res16 = 0;
+	one = 1;
+	m1 = -1;
+	
+	for i = 0 to 4{
+	  
+	  ?{"<u" = c} = #CMP(a[i], b[i]);
+	  res16 = #CMOVcc_16(c, one, res16);
+	  
+	  ?{">u" = c} = #CMP(a[i], b[i]);
+	  res16 = #CMOVcc_16(c, m1, res16);
+	}
+	
+	res = (8u)res16;
+	return res;
+}
+
+inline fn __cmp4_rr(reg u64[4] a b) -> reg u8
+{
+	reg u64 a0 a1 a2 a3 b0 b1 b2 b3;
+	reg u8 res;
+	
+	a0 = a[0];
+	a1 = a[1];
+	a2 = a[2];
+	a3 = a[3];
+	
+	b0 = b[0];
+	b1 = b[1];
+	b2 = b[2];
+	b3 = b[3];
+	
+	res = _cmp4_rr(a0, a1, a2, a3, b0, b1, b2, b3);
+	
+	return res;
+}
+
+inline fn __cmp4_ss(stack u64[4] a b) -> reg u8{
+	
+	reg u64 a0 a1 a2 a3 b0 b1 b2 b3;
+	reg u8 res;
+	
+	a0 = a[0];
+	a1 = a[1];
+	a2 = a[2];
+	a3 = a[3];
+	
+	b0 = b[0];
+	b1 = b[1];
+	b2 = b[2];
+	b3 = b[3];
+	
+	res = _cmp4_rr(a0, a1, a2, a3, b0, b1, b2, b3);
+	
+	return res;
+}

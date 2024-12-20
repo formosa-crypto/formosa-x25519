@@ -1,0 +1,51 @@
+inline fn __reduce5
+( reg u64[4] h,
+  reg u64[4] r,
+  reg u64 _38,
+  reg u64    z, // zero
+  reg bool cf of // cf = 0 and of = 0
+) -> reg u64[5]
+{
+  reg u64 hi lo;
+	reg u64[5] red_h;
+  //
+  ( hi, lo )   = #MULX ( _38,  r[0] );
+  of, red_h[0] = #ADOX ( h[0], lo, of );
+  cf, h[1]     = #ADCX ( h[1], hi, cf );
+
+  ( hi, lo )   = #MULX ( _38,  r[1] );
+  of, red_h[1] = #ADOX ( h[1], lo, of );
+  cf, h[2]     = #ADCX ( h[2], hi, cf );
+
+  ( hi, lo )   = #MULX ( _38,  r[2] );
+  of, red_h[2] = #ADOX ( h[2], lo, of );
+  cf, h[3]     = #ADCX ( h[3], hi, cf );
+
+  ( r[0], lo ) = #MULX ( _38, r[3] );
+  of, red_h[3] = #ADOX ( h[3], lo, of );
+
+  cf, r[0]     = #ADCX ( r[0], z, cf ); 
+  of, red_h[4] = #ADOX ( r[0], z, of );
+
+  return red_h;
+}
+
+inline fn __reduce5to4_rs(stack u64[5] as) -> reg u64[4]
+{
+	reg u64[5] a;
+	reg u64[4] c;
+	reg bool cf;
+	
+	a = #copy(as);
+	
+  ?{}, a[4] = #SHLD(a[4], a[3], 1);
+	a[3] &= mask63;
+
+	_,_,_,_,_,a[4] = #IMULri ( a[4], 19 );
+	cf, c[0] = a[0] + a[4];
+	cf, c[1] = a[1] + 0 + cf;
+	cf, c[2] = a[2] + 0 + cf;
+	cf, c[3] = a[3] + 0 + cf;
+
+  return c;
+}

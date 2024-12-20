@@ -1,0 +1,17 @@
+inline fn __decode_scalar(reg u64[8] k) -> stack u64[4]
+{
+  inline int i;
+	stack u64[4] ks;
+	reg u64 temp;
+	
+  for i=0 to 4
+  { 
+  	temp = k[i];
+  	ks[i] =  temp;}
+
+  ks[u8 0]  &= 0xf8;
+  ks[u8 31] &= 0x3f;
+  ks[u8 31] |= 0x40;
+	
+  return ks;
+}

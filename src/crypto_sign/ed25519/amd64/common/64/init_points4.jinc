@@ -1,0 +1,52 @@
+inline fn __init_point_inf()
+  ->
+  stack u64[4],
+  stack u64[4],
+  stack u64[4],
+  stack u64[4]
+{
+  stack u64[4] x2 y2 z2 t2;
+  reg u64 z;
+  inline int i;
+
+  ?{}, z = #set0();
+
+  x2[0] = 0;
+  y2[0] = 1;
+  z2[0] = 1;
+  t2[0] = 0;
+
+  for i=1 to 4
+  { x2[i] = z;
+  	y2[i] = z;
+  	z2[i] = z;
+  	t2[i] = z;
+  }
+
+  return x2, y2, z2, t2;
+}
+
+inline fn __init_point_inf_p(reg ptr u64[16] pp)
+  ->
+  reg ptr u64[16]
+{
+  reg u64 z;
+  inline int i;
+
+  ?{}, z = #set0();
+
+  pp[0] = 0;
+  pp[4] = 1;
+  pp[8] = 1;
+  pp[12] = 0;
+
+  for i=1 to 4
+  { pp[4*i + i] = z;
+  	pp[4*i + i] = z;
+  	pp[4*i + i] = z;
+  	pp[4*i + i] = z;
+  }
+
+  return pp;
+}
+

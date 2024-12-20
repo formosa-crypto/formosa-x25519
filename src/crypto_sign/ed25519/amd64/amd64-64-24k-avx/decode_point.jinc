@@ -1,0 +1,185 @@
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/sub4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/add4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/cmp4.jinc"
+
+require "sqr_root4.jinc"
+require "invert4.jinc"
+require "reduce_p4.jinc"
+
+inline fn __decode_point(stack u64[4] y, #msf reg u64 msf) -> stack u64[4], stack u64[4], stack u64[4], stack u64[4], stack u8, #msf reg u64
+{
+  reg u8 temp temp_aux sign;
+  reg u64 z cond temp_64 sign_64;
+  stack u8 signs valid;
+  stack u64[4] m1 x x2 x3 ys z3 t;
+  inline int i;
+  reg bool branch_cond;
+  #mmx reg u64 msf_s;
+  
+  for i=0 to 4
+	{
+		temp_64 = y[3-i];
+		temp_64 = #BSWAP_64(temp_64);
+		ys[i] = temp_64;
+	}
+  y = #copy(ys);
+  
+  m1[0] = 1;
+  m1[1] = 0;
+  m1[2] = 0;
+  m1[3] = 0;
+  
+  valid = 1;
+  
+  // Get the MSB of y as sign and discard MSB
+  temp = y[u8 31];
+  temp_aux = temp;
+  sign = temp_aux >> 7;
+  temp &= 0x7f;
+  y[u8 31] = temp;
+  
+  sign_64 = (64u) sign;
+  sign_64 = #protect(sign_64, msf);
+  sign = (8u) sign_64;
+  signs = sign;
+  
+  // Check if y < p
+  temp = __cmp4_ss(p, y);
+  temp_64 = (64s) temp;
+  temp_64 = #protect(temp_64, msf);
+  
+  branch_cond = temp_64 != 1;
+  if (branch_cond){
+  	msf = #update_msf(branch_cond, msf);
+    valid = 0;
+  }
+  else{
+  	msf = #update_msf(!branch_cond, msf);
+  }
+  
+  msf_s = #mov_msf(msf);
+  x3 = __sqr4_ss(y);
+  x2 = __mul4_sss(x3, ecd); // d * y * y
+  x3 = __sub4_sss(x3, m1); // y * y - 1
+  x2 = __add4_sss(x2, m1); // d * y * y + 1
+  msf = #mov_msf(msf_s);
+  x2, msf = __invert4_ss(x2, msf);
+  msf_s = #mov_msf(msf);
+  x2 = __mul4_sss(x2, x3);
+  
+  msf = #mov_msf(msf_s);
+  x, msf = __sqr_root4_ss(x2, msf);
+  msf_s = #mov_msf(msf);
+  
+  x3 = __sqr4_ss(x);
+  x3 = __sub4_sss(x3, x2);
+  
+  // If (x*x - x2) % p != 0 multiply with squareroot of minus one
+  cond = x3[0];
+  cond |= x3[1];
+  cond |= x3[2];
+  cond |= x3[3];
+  
+  msf = #mov_msf(msf_s);
+  cond = #protect(cond, msf);
+  branch_cond = cond != 0;
+  if(branch_cond){
+  	msf = #update_msf(branch_cond, msf);
+  	msf_s = #mov_msf(msf);
+  	x = __mul4_sss(x, sqrtm1);
+  }
+  else{
+  	msf = #update_msf(!branch_cond, msf);
+  	msf_s = #mov_msf(msf);
+  }
+  
+  x3 = __sqr4_ss(x);
+  x3 = __sub4_sss(x3, x2);
+  
+  cond = x3[0];
+  cond |= x3[1];
+  cond |= x3[2];
+  cond |= x3[3];
+  
+  msf = #mov_msf(msf_s);
+  cond = #protect(cond, msf);
+  
+  branch_cond = cond != 0;
+  if(branch_cond){
+  	msf = #update_msf(branch_cond, msf);
+    valid = 0;
+  }
+  else{
+  	msf = #update_msf(!branch_cond, msf);
+  }
+  msf_s = #mov_msf(msf);
+  
+  x = __reduce_p4(x);
+  
+  sign = signs;
+  
+  msf = #mov_msf(msf_s);
+  temp = x[u8 0];
+  temp_64 = (64u) temp;
+  temp_64 = #protect(temp_64, msf);
+  temp = (8u) temp_64;
+  temp = temp & 1;
+  
+  branch_cond = temp != sign;
+  if(branch_cond){
+  	msf = #update_msf(branch_cond, msf);
+  	msf_s = #mov_msf(msf);
+    x = __sub4_sss(p, x);
+  }
+  else{
+  	msf = #update_msf(!branch_cond, msf);
+  	msf_s = #mov_msf(msf);
+  }
+  
+  t = __mul4_sss(x, y);
+  t = __reduce_p4(t);
+  
+  ?{}, z = #set0();
+  z3[0] = 1;
+  for i=1 to 4
+  { 
+    z3[i] = z;
+  }
+  
+  cond = x2[0];
+  cond |= x2[1];
+  cond |= x2[2];
+  cond |= x2[3];
+  
+  msf = #mov_msf(msf_s);
+  cond = #protect(cond, msf);
+  sign = signs;
+  
+  branch_cond = cond == 0;
+  if(branch_cond){
+  	msf = #update_msf(branch_cond, msf);
+  	
+    branch_cond = sign != 0;
+  	if(branch_cond){
+  		msf = #update_msf(branch_cond, msf);
+      valid = 0;
+    }
+    else{
+    	msf = #update_msf(!branch_cond, msf);
+    }
+    
+    ?{}, z = #set0();
+		t[0] = z;
+		x[0] = z;
+    for i=1 to 4
+    {
+      t[i] = z;
+      x[i] = z;
+    }
+  }
+  else{
+  	msf = #update_msf(!branch_cond, msf);
+  }
+  
+  return x, y, z3, t, valid, msf;
+}

@@ -1,0 +1,77 @@
+require "sc25519_window4.jinc"
+require "ge25519_nielsadd2.jinc"
+require "choose_t.jinc"
+require "init_r.jinc"
+
+inline fn __ge25519_scalarmult_base(stack u64[16] r, reg u64[4] s, #msf reg u64 msf) -> reg ptr u64[16], #msf reg u64
+{
+  reg u8 b_8;
+  #spill_to_mmx
+  reg u64 i;
+  reg u64 b_arg pos_arg;
+  reg u64[4] rx ry rz;
+  stack u8[64] b;
+  stack u64[12] t;
+  stack u64[19] rs;
+	inline int j;
+	reg bool cond;
+	#mmx reg u64 msf_s;
+	
+	msf_s = #mov_msf(msf);
+	
+  b = sc25519_window4(s);
+
+	b_8 = b[0];
+  b_arg = (64s) b_8;
+  
+  rs = init_r(b_arg);
+  
+	
+	i = 1;
+	() = #spill(i);
+	
+	
+  while{cond = (i < 64); msf = #mov_msf(msf_s);}(cond)
+  {
+  	msf = #update_msf(cond, msf);
+  	msf_s = #mov_msf(msf);
+  	
+  	b_arg = (64s) b[(int)i];
+  	pos_arg = i;
+  	
+    t = choose_t(pos_arg, b_arg);
+    rs = ge25519_nielsadd2(t, rs);
+    
+    () = #unspill(i);
+    i += 1;
+    () = #spill(i);
+  }
+	msf = #update_msf(!cond, msf);
+	msf_s = #mov_msf(msf);
+	
+  rx = __reduce5to4_rs(rs[0:5]);
+  for j=0 to 4
+  {
+  	r[j] = rx[j];
+  }
+  
+  ry = __reduce5to4_rs(rs[5:5]);
+  for j=0 to 4
+  {
+  	r[4 + j] = ry[j];
+  }
+  
+  rz = __reduce5to4_rs(rs[10:5]);
+  for j=0 to 4
+  {
+  	r[8 + j] = rz[j];
+  }
+  
+  for j=0 to 4
+  {
+  	r[12 + j] = rs[15+j];
+  }
+  
+  msf = #mov_msf(msf_s);
+  return r, msf;
+}

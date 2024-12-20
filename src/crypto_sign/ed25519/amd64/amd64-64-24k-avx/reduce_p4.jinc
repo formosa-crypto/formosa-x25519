@@ -1,0 +1,50 @@
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/cmp4.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/sub4.jinc"
+
+inline fn __reduce_p4( stack u64[4] a) -> stack u64[4]
+{
+  reg u8 temp_8;
+  reg u64 temp_64;
+  stack u64[4] res;
+ 	reg u64[4] sub_p;
+    
+  temp_64 = a[3];
+  temp_64 = temp_64 >>s 63;
+  
+  sub_p[0] = p[0];
+  sub_p[0] &= temp_64;
+  
+  sub_p[1] = p[1];
+  sub_p[1] &= temp_64;
+  
+  sub_p[2] = p[2];
+  sub_p[2] &= temp_64;
+  
+  sub_p[3] = p[3];
+  sub_p[3] &= temp_64;
+  
+  a = __sub4_ssr(a, sub_p);
+  
+  temp_8 = __cmp4_ss(a, p);
+  temp_8 = temp_8 >>s 1;
+  
+  temp_64 = (64u)temp_8;
+  temp_64 = temp_64 << 56;
+  temp_64 = temp_64 >>s 56;
+  
+  sub_p[0] = p[0];
+  sub_p[0] &= temp_64;
+  
+  sub_p[1] = p[1];
+  sub_p[1] &= temp_64;
+  
+  sub_p[2] = p[2];
+  sub_p[2] &= temp_64;
+  
+  sub_p[3] = p[3];
+  sub_p[3] &= temp_64;
+  
+  res = __sub4_ssr(a, sub_p);
+  
+  return res;
+}

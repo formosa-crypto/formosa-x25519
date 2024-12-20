@@ -1,0 +1,87 @@
+u64 twoexp8_p0 = 0xFFFFFFFFFFFFED00;
+u64 twoexp8_p123 = 0xFFFFFFFFFFFFFFFF;
+u64 twoexp8_p4 = 0x000000000000007F;
+
+inline fn __sub5_rrr(reg u64[5] a, reg u64[5] b) -> reg u64[4]
+{
+	reg bool cf;
+	reg u64[4] c;
+	inline int i;
+	
+	cf, a[0] += twoexp8_p0;
+	cf, a[1] += twoexp8_p123 + cf;
+	cf, a[2] += twoexp8_p123 + cf;
+	cf, a[3] += twoexp8_p123 + cf;
+	cf, a[4] += twoexp8_p4 + cf;
+
+	cf, a[0] -= b[0];
+	for i=1 to 5
+	{ cf, a[i] -= b[i] - cf; }
+
+	_, _, _, _, _, a[4] = #SHLD(a[4], a[3], 1);
+	a[3] &= mask63;
+
+	_,_,_,_,_,a[4] = #IMULri ( a[4], 19 );
+	cf, c[0] = a[0] + a[4];
+	cf, c[1] = a[1] + 0 + cf;
+	cf, c[2] = a[2] + 0 + cf;
+	cf, c[3] = a[3] + 0 + cf;
+	
+	return c;
+}
+
+inline fn __sub5_rrs(reg u64[5] a, stack u64[5] b) -> reg u64[4]
+{
+	reg bool cf;
+	reg u64[4] c;
+	inline int i;
+	
+	cf, a[0] += twoexp8_p0;
+	cf, a[1] += twoexp8_p123 + cf;
+	cf, a[2] += twoexp8_p123 + cf;
+	cf, a[3] += twoexp8_p123 + cf;
+	cf, a[4] += twoexp8_p4 + cf;
+
+	cf, a[0] -= b[0];
+	for i=1 to 5
+	{ cf, a[i] -= b[i] - cf; }
+
+	_, _, _, _, _, a[4] = #SHLD(a[4], a[3], 1);
+	a[3] &= mask63;
+
+	_,_,_,_,_,a[4] = #IMULri ( a[4], 19 );
+	cf, c[0] = a[0] + a[4];
+	cf, c[1] = a[1] + 0 + cf;
+	cf, c[2] = a[2] + 0 + cf;
+	cf, c[3] = a[3] + 0 + cf;
+	
+	return c;
+}
+
+inline fn __sub5_rrp(reg u64[5] a, reg ptr u64[5] b) -> reg u64[4]
+{
+	reg bool cf;
+	reg u64[4] c;
+	inline int i;
+	
+	cf, a[0] += twoexp8_p0;
+	cf, a[1] += twoexp8_p123 + cf;
+	cf, a[2] += twoexp8_p123 + cf;
+	cf, a[3] += twoexp8_p123 + cf;
+	cf, a[4] += twoexp8_p4 + cf;
+
+	cf, a[0] -= b[0];
+	for i=1 to 5
+	{ cf, a[i] -= b[i] - cf; }
+
+	_, _, _, _, _, a[4] = #SHLD(a[4], a[3], 1);
+	a[3] &= mask63;
+
+	_,_,_,_,_,a[4] = #IMULri ( a[4], 19 );
+	cf, c[0] = a[0] + a[4];
+	cf, c[1] = a[1] + 0 + cf;
+	cf, c[2] = a[2] + 0 + cf;
+	cf, c[3] = a[3] + 0 + cf;
+	
+	return c;
+}

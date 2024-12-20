@@ -1,0 +1,24 @@
+inline fn sc25519_add_rrs(reg u64[4] r, reg ptr u64[4] y) -> reg u64[4]
+{
+	reg bool cf;
+	reg u64[4] t;
+	
+	cf, r[0] += y[0];
+	cf, r[1] += y[1] + cf;
+	cf, r[2] += y[2] + cf;
+	cf, r[3] += y[3] + cf;
+	
+	t = #copy(r);
+	
+	cf, t[0] -= L[0];
+	cf, t[1] -= L[1] - cf;
+	cf, t[2] -= L[2] - cf;
+	cf, t[3] -= L[3] - cf;
+	
+	r[0] = #CMOVcc(!cf, t[0], r[0]);
+	r[1] = #CMOVcc(!cf, t[1], r[1]);
+	r[2] = #CMOVcc(!cf, t[2], r[2]);
+	r[3] = #CMOVcc(!cf, t[3], r[3]);
+	
+	return r;
+}

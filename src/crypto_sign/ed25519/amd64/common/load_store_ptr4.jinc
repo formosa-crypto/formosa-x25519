@@ -1,0 +1,21 @@
+inline fn load_ptr4(reg ptr u64[4] src) -> reg u64[4]
+{
+	reg u64[4] dest;
+	dest[0] = src[0];
+	dest[1] = src[1];
+	dest[2] = src[2];
+	dest[3] = src[3];
+	
+	return dest;
+}
+
+inline fn store_ptr4(reg ptr u64[4] src) -> reg u64[4]
+{
+	reg u64[4] dest;
+	dest[0] = src[0];
+	dest[1] = src[1];
+	dest[2] = src[2];
+	dest[3] = src[3];
+	
+	return dest;
+}

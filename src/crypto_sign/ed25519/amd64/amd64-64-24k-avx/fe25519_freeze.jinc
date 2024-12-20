@@ -1,0 +1,66 @@
+inline fn __freeze4_rr(reg u64[4] r_in) -> reg u64[4]
+{
+	reg u64[4] t r;
+	reg u64 two63;
+	reg bool cf;
+	inline int i;
+	r = #copy(r_in);
+	t = #copy(r);
+	two63 = 0x8000000000000000;
+	
+	cf, t[0] += 19;
+	cf, t[1] += 0 + cf;
+	cf, t[2] += 0 + cf;
+	cf, t[3] += two63 + cf;
+	
+	for i=0 to 4
+	{
+		r[i] = #CMOVcc(cf, t[i], r[i]);
+	}
+	t = #copy(r);
+	
+	cf, t[0] += 19;
+	cf, t[1] += 0 + cf;
+	cf, t[2] += 0 + cf;
+	cf, t[3] += two63 + cf;
+	
+	for i=0 to 4
+	{
+		r[i] = #CMOVcc(cf, t[i], r[i]);
+	}
+	
+	return r;
+}
+
+inline fn __freeze4_rs(stack u64[4] rs) -> reg u64[4]
+{
+	reg u64[4] r;
+	
+	r = #copy(rs);
+	r = __freeze4_rr(r);
+	
+	return r;
+}
+
+inline fn __freeze4_sr(reg u64[4] r) -> stack u64[4]
+{
+	stack u64[4] h;
+	
+	r = __freeze4_rr(r);
+	h = #copy(r);
+	
+	return h;
+}
+
+inline fn __freeze4_ss(stack u64[4] rs) -> stack u64[4]
+{
+	reg u64[4] r;
+	stack u64[4] h;
+	
+	r = #copy(rs);
+	r = __freeze4_rr(r);
+	h = #copy(r);
+	
+	return h;
+}
+

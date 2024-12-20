@@ -1,0 +1,87 @@
+require "ge25519_base_niels_256.jinc"
+
+inline fn choose_t(reg u64 pos, reg u64 b) -> stack u64[12]
+{	
+	reg u64 mask u;
+	reg u256 cmp_1 cmp_2 cmp_3 cmp_4 cmp_5 cmp_6 cmp_7 cmp_8;
+	reg u128 b_128 u_128;
+	reg u256 b_256 p_256 u_256 t tt_256;
+	reg u256 tysubx txaddy tt2d;
+	stack u64[12] t_stack;
+	reg ptr u256[1536] _basep;
+	
+	_basep = basep;
+	
+	pos *= 768;
+	
+	mask = b;
+	mask >>s= 7;
+	
+	u = b;
+	u += mask;
+	u ^= mask;
+	
+	tysubx = _1[u256 0];
+	txaddy = _1[u256 0];
+	tt2d =  #set0_256();
+	
+	u_128 = #set0_128();
+	u_256 = (256u)#VPINSR_2u64(u_128, u, 0);
+	u_256 = #VPBROADCAST_4u64(u_256);
+	cmp_1 = #VPCMPEQ_4u64(u_256, v1234[u256 0]);
+	cmp_5 = #VPCMPEQ_4u64(u_256, v5678[u256 0]);
+	
+	cmp_2 = #VPERMQ(cmp_1, 0x55);
+	cmp_6 = #VPERMQ(cmp_5, 0x55);
+	cmp_3 = #VPERMQ(cmp_1, 0xaa);
+	cmp_7 = #VPERMQ(cmp_5, 0xaa);
+	cmp_4 = #VPERMQ(cmp_1, 0xff);
+	cmp_8 = #VPERMQ(cmp_5, 0xff);
+	cmp_1 = #VPERMQ(cmp_1, 0x00);
+	cmp_5 = #VPERMQ(cmp_5, 0x00);
+	
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos], cmp_1);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*1], cmp_1);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*2], cmp_1);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*3], cmp_2);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*4], cmp_2);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*5], cmp_2);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*6], cmp_3);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*7], cmp_3);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*8], cmp_3);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*9], cmp_4);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*10], cmp_4);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*11], cmp_4);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*12], cmp_5);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*13], cmp_5);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*14], cmp_5);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*15], cmp_6);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*16], cmp_6);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*17], cmp_6);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*18], cmp_7);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*19], cmp_7);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*20], cmp_7);
+	tysubx = #VPBLENDVB_256(tysubx, _basep.[(int)pos + 32*21], cmp_8);
+	txaddy = #VPBLENDVB_256(txaddy, _basep.[(int)pos + 32*22], cmp_8);
+	tt2d	 = #VPBLENDVB_256(tt2d	, _basep.[(int)pos + 32*23], cmp_8);
+	
+	b_128 = #set0_128();
+	b_256 = (256u)#VPINSR_2u64(b_128, b, 0);
+	b_256 = #VPBROADCAST_4u64(b_256);
+	
+	b_256 = #VPSRA_8u32(b_256, 31);
+	t = tysubx;
+	tysubx = #VPBLENDVB_256(tysubx, txaddy, b_256);
+	txaddy = #VPBLENDVB_256(txaddy, t, b_256);
+	t_stack[u256 0] = tysubx;
+	t_stack[u256 1] = txaddy;
+
+	p_256 = p[u256 0];
+	tt_256 = #VPSUB_4u64(p_256, tt2d);
+	
+	tt2d = #VPBLENDVB_256(tt2d, tt_256, b_256);
+
+	t_stack[u256 2] = tt2d;
+
+	return t_stack;
+}

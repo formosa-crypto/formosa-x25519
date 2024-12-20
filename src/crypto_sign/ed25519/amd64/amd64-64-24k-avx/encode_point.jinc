@@ -1,0 +1,31 @@
+require "safe-gcd.jinc"
+require "fe25519_pack.jinc"
+
+inline fn __encode_point(stack u64[4] x y z, #msf reg u64 msf) -> reg u64[4], #msf reg u64
+{
+  reg u8 temp;
+  reg u64[4] zr res;
+  
+  zr = #copy(z);
+  #update_after_call
+  zr, msf = __invert4(zr, msf);
+  
+	z = #copy(zr);
+	  
+  x = __mul4_ssr(x, zr);
+  zr = #copy(z);
+  y = __mul4_ssr(y, zr);
+  
+  temp = y[u8 31];
+  temp &= 0x7f;
+  y[u8 31] = temp;
+  
+  temp = x[u8 0];
+  temp &= 0x1;
+  temp = temp << 7;
+  y[u8 31] |= temp;
+  
+	res = #copy(y);
+	
+  return res, msf;
+}

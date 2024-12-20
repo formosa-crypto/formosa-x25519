@@ -1,0 +1,7 @@
+require "fe25519_freeze.jinc"
+
+inline fn __fe25519_pack(reg u64[4] x) -> reg u64[4]
+{
+	x = __freeze4_rr(x);
+	return x;
+}

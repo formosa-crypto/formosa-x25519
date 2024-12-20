@@ -1,0 +1,125 @@
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/add5.jinc"
+from formosa25519 require "crypto_sign/ed25519/amd64/common/64/sub5.jinc"
+require "mul5.jinc"
+
+inline fn ge25519_nielsadd2(stack u64[12] q, stack u64[19] r) -> stack u64[19]
+{
+	reg u64[5] a b c e f g h;
+	reg u64[4] a4 b4 c4 f4 g4 q4;
+	stack u64[5] as;
+	stack u64[4] as4 bs4 fs4 gs4; 
+	reg u64[5] rx ry rz rt;
+	reg bool cf;
+	inline int i;
+	
+	// a, b = p->Y
+	a[0] = r[5];
+	a[1] = r[6];
+	a[2] = r[7];
+	a[3] = r[8];
+	a[4] = r[9];
+	b = #copy(a);
+	
+	// r->Y = p->Y - p->X
+	a4 = __sub5_rrs(a, r[0:5]);
+  as4 = #copy(a4);
+  
+	// r->X = p->Y + p->X
+	b4 = __add5_rrs(b, r[0:5]);
+	bs4 = #copy(b4);
+	
+	// r->Y = r->Y * q->yminusx
+	q4[0] = q[0];
+	q4[1] = q[1];
+	q4[2] = q[2];
+	q4[3] = q[3];
+	as = __mul5_ssr(as4, q4);
+	// r->Z = r->X * q->yplusx
+	q4[0] = q[4];
+	q4[1] = q[5];
+	q4[2] = q[6];
+	q4[3] = q[7];
+	e = __mul5_rsr(bs4, q4);
+	h = #copy(e);
+	
+	// r->X = r->Z - r->Y
+	a4 = __sub5_rrs(e, as);
+	as4 = #copy(a4);
+	// r->Y = r->Z + r->Y
+	b4 = __add5_rrs(h, as);
+	bs4 = #copy(b4);
+	
+	// r->T = q->xy2d * p->T
+	c4[0] = r[15];
+	c4[1] = r[16];
+	c4[2] = r[17];
+	c4[3] = r[18];
+	
+	c = __mul5_rsr(q[8:4], c4);
+	
+	// f = p->Z
+	for i=0 to 5
+	{
+		f[i] = r[10 + i];
+	}
+	
+	// t0 = 2 * p->Z
+	cf, f[0] += f[0];
+  for i=1 to 5
+  { cf, f[i] += f[i] + cf; }
+	
+	// g = t0
+	g = #copy(f);
+	
+	
+	// r->T = t0 - r->T
+	f4 = __sub5_rrr(f, c);
+	fs4 = #copy(f4);
+	
+	// r->Z = t0 + r->Z
+	g4 = __add5_rrr(g, c);
+	gs4 = #copy(g4);
+	
+	// r(x,y,z,t) = e,h,g,f
+	// p = r
+	// r->X = p->X * p->T
+	rx = __mul5_rss(as4, fs4);
+	
+	for i=0 to 5
+	{
+		r[i] = rx[i];
+	}
+	
+	// r->Y = p->Y * p->Z
+	ry = __mul5_rss(bs4, gs4);
+	for i=0 to 5
+	{
+		r[5 + i] = ry[i];
+	}
+	
+	// r->Z = p->Z * p->T
+	rz = __mul5_rss(gs4, fs4);
+	for i=0 to 5
+	{
+		r[10 + i] = rz[i];
+	}
+	
+	// r->T = p->X * p->Y
+	rt = __mul5_rss(as4, bs4);
+	
+	_, _, _, _, _, rt[4] = #SHLD(rt[4], rt[3], 1);
+	rt[3] &= mask63;
+
+	_,_,_,_,_,rt[4] = #IMULri ( rt[4], 19 );
+	cf, rt[0] += rt[4];
+	cf, rt[1] += 0 + cf;
+	cf, rt[2] += 0 + cf;
+	cf, rt[3] += 0 + cf;
+	for i=0 to 4
+	{
+		r[15 + i] = rt[i];
+	}
+	
+	return r;
+}
+

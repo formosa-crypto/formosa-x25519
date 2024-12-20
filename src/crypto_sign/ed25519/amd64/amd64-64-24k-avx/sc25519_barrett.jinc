@@ -1,0 +1,243 @@
+inline fn sc25519_barrett(stack u64[8] x) -> reg u64[4]
+{
+	reg u64 z rax rdx q23 q24 c;
+	reg u64[4] q3 r r2 t;
+	stack u64[4] q3s;
+	reg bool cf;
+	inline int i;
+	
+	z = 0;
+	for i = 0 to 4 {
+		q3[i] = 0;
+	}
+	
+	rax = x[3];
+	rdx, rax = rax * mu[3];
+	q23 = rax;
+	c = rdx;
+	
+	rax = x[3];
+	rdx, rax = rax * mu[4];
+	q24 = rax;
+	cf, q24 += c;
+	_, q3[0] += rdx + cf;
+	
+	rax = x[4];
+	rdx, rax = rax * mu[2];
+	cf, q23 += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[4];
+	rdx, rax = rax * mu[3];
+	cf, q24 += rax;
+	_, rdx += z + cf;
+	cf, q24 += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[4];
+	rdx, rax = rax * mu[4];
+	cf, q3[0] += rax;
+	_, rdx += z + cf;
+	cf, q3[0] += c;
+	_, q3[1] += rdx + cf;
+	
+	rax = x[5];
+	rdx, rax = rax * mu[1];
+	cf, q23 += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[5];
+	rdx, rax = rax * mu[2];
+	cf, q24 += rax;
+	_, rdx += z + cf;
+	cf, q24 += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[5];
+	rdx, rax = rax * mu[3];
+	cf, q3[0] += rax;
+	_, rdx += z + cf;
+	cf, q3[0] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[5];
+	rdx, rax = rax * mu[4];
+	cf, q3[1] += rax;
+	_, rdx += z + cf;
+	cf, q3[1] += c;
+	_, q3[2] += rdx + cf;
+	
+	rax = x[6];
+	rdx, rax = rax * mu[0];
+	cf, q23 += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[6];
+	rdx, rax = rax * mu[1];
+	cf, q24 += rax;
+	_, rdx += z + cf;
+	cf, q24 += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[6];
+	rdx, rax = rax * mu[2];
+	cf, q3[0] += rax;
+	_, rdx += z + cf;
+	cf, q3[0] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[6];
+	rdx, rax = rax * mu[3];
+	cf, q3[1] += rax;
+	_, rdx += z + cf;
+	cf, q3[1] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[6];
+	rdx, rax = rax * mu[4];
+	cf, q3[2] += rax;
+	_, rdx += z + cf;
+	cf, q3[2] += c;
+	_, q3[3] += rdx + cf;
+	
+	rax = x[7];
+	rdx, rax = rax * mu[0];
+	cf, q24 += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = x[7];
+	rdx, rax = rax * mu[1];
+	cf, q3[0] += rax;
+	_, rdx += z + cf;
+	cf, q3[0] += c;
+	c = 0;
+	_, c += rdx + cf;
+	q3s[0] = q3[0];
+	
+	rax = x[7];
+	rdx, rax = rax * mu[2];
+	cf, q3[1] += rax;
+	_, rdx += z + cf;
+	cf, q3[1] += c;
+	c = 0;
+	_, c += rdx + cf;
+	q3s[1] = q3[1];
+	
+	rax = x[7];
+	rdx, rax = rax * mu[3];
+	cf, q3[2] += rax;
+	_, rdx += z + cf;
+	cf, q3[2] += c;
+	c = 0;
+	_, c += rdx + cf;
+	q3s[2] = q3[2];
+	
+	rax = x[7];
+	rdx, rax = rax * mu[4];
+	cf, q3[3] += rax;
+	_, rdx += z + cf;
+	q3[3] += c;
+	q3s[3] = q3[3];
+	
+	rax = q3s[0];
+	rdx, rax = rax * L[0];
+	r2[0] = rax;
+	c = rdx;
+	
+	rax = q3s[0];
+	rdx, rax = rax * L[1];
+	r2[1] = rax;
+	cf, r2[1] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = q3s[0];
+	rdx, rax = rax * L[2];
+	r2[2] = rax;
+	cf, r2[2] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = q3s[0];
+	rdx, rax = rax * L[3];
+	r2[3] = rax;
+	_, r2[3] += c;
+	
+	rax = q3s[1];
+	rdx, rax = rax * L[0];
+	cf, r2[1] += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = q3s[1];
+	rdx, rax = rax * L[1];
+	cf, r2[2] += rax;
+	_, rdx += z + cf;
+	cf, r2[2] += c;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = q3s[1];
+	rdx, rax = rax * L[2];
+	r2[3] += rax;
+	r2[3] += c;
+	
+	rax = q3s[2];
+	rdx, rax = rax * L[0];
+	cf, r2[2] += rax;
+	c = 0;
+	_, c += rdx + cf;
+	
+	rax = q3s[2];
+	rdx, rax = rax * L[1];
+	r2[3] += rax;
+	r2[3] += c;
+	
+	rax = q3s[3];
+	rdx, rax = rax * L[0];
+	r2[3] += rax;
+	
+	r[0] = x[0];
+	cf, r[0] -= r2[0];
+	t[0] = r[0];
+	
+	for i=1 to 4
+	{
+		r[i] = x[i];
+		cf, r[i] -= r2[i] - cf;
+		t[i] = r[i];
+	}
+	
+	cf, t[0] -= L[0];
+	cf, t[1] -= L[1] - cf;
+	cf, t[2] -= L[2] - cf;
+	cf, t[3] -= L[3] - cf;
+	
+	for i=0 to 4
+	{
+		r[i] = #CMOVcc(!cf, t[i], r[i]);
+		t[i] = r[i];
+	}
+	
+	cf, t[0] -= L[0];
+	cf, t[1] -= L[1] - cf;
+	cf, t[2] -= L[2] - cf;
+	cf, t[3] -= L[3] - cf;
+	
+	for i=0 to 4
+	{
+		r[i] = #CMOVcc(!cf, t[i], r[i]);
+	}
+	
+	return r;
+}
