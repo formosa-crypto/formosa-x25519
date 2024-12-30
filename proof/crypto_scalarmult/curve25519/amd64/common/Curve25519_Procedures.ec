@@ -357,7 +357,7 @@ qed.
 (** step 2 : decode_u_coordinate **)
 lemma eq_proc_op_decode_u_coordinate u:
   hoare [ CurveProcedures.decode_u_coordinate : u' = u
-          ==> res = inzp (to_uint (spec_decode_u_coordinate u))].
+          ==> res = Zp.inzp (to_uint (spec_decode_u_coordinate u))].
 proof.
   proc; wp. rewrite /spec_decode_u_coordinate /=; skip.
   move => &mu hu; rewrite hu //.
@@ -367,7 +367,7 @@ lemma eq_proc_op_decode_u_coordinate_base:
   hoare[ CurveProcedures.decode_u_coordinate_base:
       true
       ==>
-      res = inzp (to_uint (spec_decode_u_coordinate( W256.of_int 9)))
+      res = Zp.inzp (to_uint (spec_decode_u_coordinate( W256.of_int 9)))
   ].
 proof.
   proc *; inline 1; wp.
@@ -567,7 +567,8 @@ proof.
   call eq_sqr; wp. call eq_sqr; wp. call eq_sqr; wp.
   call eq_sqr; wp. call eq_sqr; wp. call eq_sqr; wp.
   call eq_sqr; wp. call eq_sqr; wp.
-  skip => />. smt().
+  skip => />. move => &2. do split.
+  smt(). smt().
 qed.
 
 
@@ -591,8 +592,8 @@ proof.
   ecall (eq_proc_op_encode_point (x2, z2)). simplify.
   ecall (eq_proc_op_montgomery_ladder u'' k'). simplify. skip.
   move => &1 [H0] [H1] [H2] [H3] [H4] [H5] [H6] H7. split.
-  rewrite H6 => />.
-  move => H8 H9 H10 H11 H12. smt().
+  rewrite H6 => />. rewrite /select_double_from_triple /op_montgomery_ladder3 => />.
+  move => [#] H8 H9 H10 H11. smt().
 qed.
 
 lemma eq_proc_op_scalarmult (k u : W256.t) :
@@ -629,3 +630,78 @@ proof.
   rewrite !op_encode_pointE. progress. congr; congr; congr; congr. congr. congr.
   rewrite H6 H4 => />. congr. congr. congr. rewrite H6 H4 => />.
  qed.
+
+
+op modulusR : int = W64.modulus ^ 4.
+
+module CurveProcedures_Reduction = {
+
+proc freeze(a: int): zp = {
+    var r;
+    r <- Zp.inzp a;
+    return r;
+  }
+
+  proc cminusP(a: int): int = {
+    var r;
+    r <- if a < p then a else a-p;
+    return r;
+  }
+
+  proc reduce(a: int): int = {
+    var r;
+    r <- reduce a;
+    return r;
+  }
+
+  proc addn(a b: int): bool * int = {
+    var c, r;
+    c <- modulusR <= (a+b);
+    r <- (a + b) %% modulusR;
+    return (c, r);
+  }
+
+  proc ctseln(cond: bool, c a: int): int = {
+    var r;
+    r <- (if cond then a else c);
+    return r;
+  }
+
+  proc freeze2(a: int): int = {
+   var r;
+   r <@ cminusP(a);
+   r <@ cminusP(r);
+   return r;
+ }
+}.
+
+require import StdOrder.
+import IntOrder.
+
+equiv freeze_eq:
+ CurveProcedures_Reduction.freeze ~ CurveProcedures_Reduction.freeze2: ={a} /\ 0<=a{2}<modulusR ==> asint res{1}=res{2}.
+proof.
+  proc; inline*; wp; skip => &1 &2.
+  move=> [-> [Ha1 Ha2]] /=. auto => />.
+  rewrite inzpK; case: (a{2} < p) => H0.
+   by rewrite modz_small /#.
+  case: (a{2} - p < p) => H1.
+   rewrite {1}(_: a{2} = a{2} - p + p) 1:/# modzDr modz_small; last reflexivity.
+   by apply bound_abs => /#.
+  rewrite (_: a{2} = a{2} - p - p + p + p) 1:/#.
+  rewrite modzDr modzDr modz_small.
+  apply bound_abs; split => *; first smt().
+  move: Ha2 => /=. have ->: modulusR = W256.modulus. auto => />. smt(pVal).
+  smt().
+qed.
+
+lemma reduction_to_bytes ff:
+  hoare [CurveProcedures_Reduction.freeze2 :
+        ff = a /\ 0 <= ff < W256.modulus
+        ==>
+        res = asint (inzp res)
+    ].
+proof.
+  proc. inline. wp; auto => />. move => H H0.
+  smt(inzpK pE pVal).
+qed.

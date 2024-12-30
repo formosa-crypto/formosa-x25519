@@ -1,8 +1,8 @@
-require import Int.
+require import Core Int Ring IntDiv StdOrder List.
 
 from Jasmin require import JModel.
 
-import Ring.IntID.
+import Ring.IntID StdOrder.IntOrder.
 
 (* modular operations modulo P *)
 op p = 2^255 - 19 axiomatized by pE.
@@ -27,7 +27,7 @@ proof.
 qed.
 
 
-(*
+
 (* congruence "mod p" *)
 
 lemma zpcgr_over a b:
@@ -40,22 +40,6 @@ qed.
 lemma inzp_over x:
  Zp.inzp (57896044618658097711785492504343953926634992332820282019728792003956564819968 * x) = Zp.inzp (19*x).
 proof. by have /= := zpcgr_over 0 x; rewrite -eq_inzp. qed.
-
-lemma zp_over_lt2p_red x:
- p <= x < 2*p =>
- x %% p = (x + 19) %% 2^255.
-proof.
-move=> *.
-rewrite modz_minus. split; smt().
-have ->: x-p = x+19-2^255.
- by rewrite pE.
-rewrite modz_minus. split.
-apply (lez_trans (p+19) (2^255) (x+19)).
-rewrite pE. trivial. smt().
- move => *. apply (ltz_trans (2*p+19) (x+19) (2*2^255)). smt().
-simplify. rewrite pE; trivial.
-smt().
-qed.
 
 
 lemma twop255_cgr : 2^255 %% p = 19 by smt(powS_minus  pow2_256).
@@ -208,4 +192,3 @@ proof.
     rewrite /reduce => H; split; first smt(red256P).
     smt(pow2_256 red256_thrice).
 qed.
-*)
