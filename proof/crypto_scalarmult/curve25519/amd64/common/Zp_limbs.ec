@@ -1,4 +1,4 @@
-require import List Int IntDiv.
+require import List Int IntDiv Ring.
 
 from Jasmin require import JModel JWord.
 require import Zp_25519 EClib Array4.
@@ -32,6 +32,8 @@ op valRep32      (x : Rep32)          : int    = val_limbs8 (Array32.to_list x) 
 op inzpRep32     (x : Rep32)          : zp     = inzp (valRep32 x) axiomatized by inzpRep32E.
 op inzpRep32List (x : W8.t list)      : zp     = inzp (valRep32List x) axiomatized by inzpRep32ListE.
 *)
+
+op limbs4 (x: Rep4) : int = W64.to_uint x.[0] + (exp 2 64) * W64.to_uint x.[1] + (exp 2 128) * W64.to_uint x.[2] + (exp 2 192) * W64.to_uint x.[3].
 
 lemma to_uint_unpack4u64 w:
     W256.to_uint w = val_digits W64.modulus (map W64.to_uint (W4u64.to_list w)).
