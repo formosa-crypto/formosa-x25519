@@ -1,6 +1,8 @@
 # Curve25519 correctness proof
 Correctness proof for the reference and optimised 4-limb implementation of Curve25519 scalar multiplication in Jasmin.
 
+Easycrypt hash: git-hash: r2024.01-452-g1038c8b
+
 Note, some lemmas are left with the tactic `admit`, which means that the lemmas are not proven, but assumed to be correct. 
 All `admits` have been proved in Cryptoline and including them is future work.
 

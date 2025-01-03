@@ -727,7 +727,7 @@ case: (toswap{1}).
   rcondt {1} 1 => //. wp => /=. skip.
     move => &1 &2 [#] 4!->> ??.
     have mask_set :  (set0_64.`6 - toswap{2}) = W64.onew. rewrite /set0_64_ /=.
-    smt(@W64).
+    smt( W64.of_intN W64.to_uintN W64.WRingA.subr_eq0 W64.ofintS W64.of_int_modulus ).
     rewrite !mask_set /=.
    have lxor1 : forall (x1 x2:W64.t),  x1 `^` (x2 `^` x1) = x2.
       move=> *. rewrite xorwC -xorwA xorwK xorw0 //.
@@ -874,7 +874,8 @@ proc. simplify. wp. sp.
     move => H6 H7 H8 H9. split. split. apply H9. split.
     rewrite to_uintB. rewrite  uleE => />. by smt(). rewrite to_uint1 H0 //.
     split. move: H1. smt(). move: H2. smt(). split. rewrite H0. move => H10.
-    smt(@W32). smt(@W32).
+    smt(W32.to_uintK_small W32.WRingA.subrK).
+    smt(W32.to_uintK' W32.WRingA.subrr).
     skip. auto => />. wp.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w /ZF_of => /=.
     call eq_spec_impl_sqr_p_ref4.
@@ -882,7 +883,7 @@ proc. simplify. wp. sp.
     rewrite to_uintB. rewrite uleE => />. move: H. smt().
     rewrite to_uint1 //. split. move: H0. smt(). move: H. smt().
     split. move => H1.
-    smt(@W32).
+    smt(W32.ge2_modulus W32.to_uintK_small W32.WRingA.subrK).
     move => H1. move: H. smt().
 qed.
 
