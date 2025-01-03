@@ -1,9 +1,9 @@
-require import Real Bool Int IntDiv List.
+require import Real Bool Int IntDiv List StdOrder.
 from Jasmin require import JModel.
 require import  Add4Extracted Sub4Extracted Mul4MulxExtracted Mul4_a24MulxExtracted Sqr4MulxExtracted. (* must be in this order so module names do not clash *)
 require import CorrectnessProof_Ref4 Curve25519_Procedures Ref4_scalarmult_s Mulx_scalarmult_s Zp_limbs Zp_25519 CryptolineEquivs_Mulx Jcheck CommonCryptoline CorrectnessProof_ToBytes.
 
-import Zp Ring.IntID.
+import Zp Ring.IntID IntOrder.
 
 require import Array4 Array32.
 
@@ -26,9 +26,8 @@ proof.
       ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
       121665) (single ((pow 2 255) - 19)))) __mul4_a24_rs_spec.
-      auto => />. move => &1 H. exists(fs{1}). auto => />.
-      smt(@W64).
-      rewrite -mul4_a24_equiv_contract. smt(@Zp_25519).
+      auto => />. move => &1 H. exists(fs{1}). rewrite -H to_uintK //=.
+      rewrite -mul4_a24_equiv_contract. smt(inzpM).
       proc *. call (__mul4_a24_rs_spec _ff).
       auto => />.
 qed.
@@ -51,7 +50,7 @@ proof.
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _gg.[ii]))) (iota_ 0 4))))
       (single ((pow 2 255) - 19)))) __mul4_rsr_spec.
-      smt(). rewrite -mul4_equiv_contract. smt(@Zp_25519).
+      smt(). rewrite -mul4_equiv_contract. smt(inzpM).
       proc *. call (__mul4_rsr_spec _ff _gg).
       auto => />.
 qed.
@@ -74,7 +73,8 @@ proof.
       (foldr (fun x => (fun (acc: int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))))
       (single ((pow 2 255) - 19)))) __sqr4_rr_spec.
-      smt(). rewrite -sqr4_equiv_contract. smt(@Zp_25519).
+      smt(). rewrite -sqr4_equiv_contract. move => &1 &2 [#] H [#] H0 H1.
+      rewrite H H1 inzpM -inzpRep4E H0  ZModpRing.expr2 //=.
       proc *. call (__sqr4_rr_spec _ff).
       auto => />.
 qed.
@@ -722,25 +722,25 @@ proc; simplify.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of to_uintB.
     + rewrite uleE to_uint1. smt(). rewrite -to_uintB. rewrite uleE. smt(W32.to_uint_cmp).
     + rewrite to_uintB. rewrite uleE to_uint1; smt(). rewrite to_uint1.
-    smt(@W32).
+    smt(W32.ge2_modulus W32.of_uintK W32.to_uintK_small W32.WRingA.addrC W32.WRingA.addNr W32.WRingA.subrK).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-  smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+  smt(W32.to_uintK W32.of_intD).
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-    smt(@W32).
+    smt(W32.ge2_modulus W32.to_uintK_small W32.WRingA.subrK).
   wp. symmetry. call eq_spec_impl__sqr_rr_mulx. wp. call eq_spec_impl__sqr_rr_mulx. wp.
   symmetry.
   skip => />. move => &1 H.
   do split. smt().
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-    smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+    smt(W32.ge2_modulus W32.of_uintK).
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
   rewrite to_uintB. rewrite uleE to_uint1. smt(W32.to_uint_cmp). rewrite to_uint1 //.
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
- smt(@W32).
+ smt(W32.ge2_modulus W32.to_uintK_small W32.WRingA.subrK).
 rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
- smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+ smt(W32.to_uintK W32.of_intD).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-  smt(@W32).
+  smt(W32.ge2_modulus W32.to_uintK_small W32.WRingA.subrK).
 qed.
 
 (*
@@ -787,8 +787,6 @@ proof.
     smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
 qed.*)
 
-
-import StdOrder.IntOrder.
 
 lemma eq_spec_impl__it_sqr_mulx (i1: int) (i2: int):
     i1 = i2 => 2 <= i1  =>
@@ -837,7 +835,7 @@ proof.
     wp; skip. auto => />.
     move => &1 &2 H H0 H1.
     do split; 1..4:smt().
-    smt(@ZModpRing @StdOrder.IntOrder). wp.
+    smt(IntOrder.Domain.exprSr IntOrder.ler_weexpn2r ZModpRing.expr1 ZModpRing.expr_pred ZModpRing.exprMn ZModpRing.exprD_nneg). wp.
     skip => />. move => &1 &2.
     do split. smt(). smt(). smt().
     move => H H1 H2 H3 H4 H5 H6.
