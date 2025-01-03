@@ -54,19 +54,19 @@ module ToBytesSpec = {
 
  proc addition(f: Rep4, _tt: W64.t, operand2: W64.t) : Rep4 = {
   var aux_4, tt0 : W64.t;
-  var _of_, _cf_, _sf_, _zf_, cf, _0, _1, _2, aux_3 : bool;
+  var cf, cf0, cf1, aux_3, _1 : bool;
   var ff : Rep4; (* we don't change the value of f, easier proofs *)
 
   (aux_3, aux_4) <- addc f.[0] operand2 false;
   cf <- aux_3;
   ff <- ff.[0 <- aux_4];
   (aux_3, aux_4) <- addc f.[1] W64.zero cf;
-  cf <- aux_3;
+  cf0 <- aux_3;
   ff <- ff.[1 <- aux_4];
-  (aux_3, aux_4) <- addc f.[2] W64.zero cf;
-  cf <- aux_3;
+  (aux_3, aux_4) <- addc f.[2] W64.zero cf0;
+  cf1 <- aux_3;
   ff <- ff.[2 <- aux_4];
-  (_1, tt0) <- addc _tt W64.zero cf;
+  (_1, tt0) <- addc _tt W64.zero cf1;
   ff <- ff.[3 <- tt0];
 
   return ff;
@@ -74,7 +74,7 @@ module ToBytesSpec = {
 
  proc subtraction(f: Rep4, operand2: W64.t) : Rep4 = {
   var aux_4 : W64.t;
-  var _of_, _cf_, _sf_, _zf_, cf, _0, _1, _2, _3, aux_3 : bool;
+  var cf, cf0, cf1, _3, aux_3 : bool;
   var ff : Rep4; (* we don't change the value of f, easier proofs *)
 
 
@@ -82,12 +82,12 @@ module ToBytesSpec = {
   cf <- aux_3;
   ff <- ff.[0 <- aux_4];
   (aux_3, aux_4) <- subc f.[1] W64.zero cf;
-  cf <- aux_3;
+  cf0 <- aux_3;
   ff <- ff.[1 <- aux_4];
-  (aux_3, aux_4) <- subc f.[2] W64.zero cf;
-  cf <- aux_3;
+  (aux_3, aux_4) <- subc f.[2] W64.zero cf0;
+  cf1 <- aux_3;
   ff <- ff.[2 <- aux_4];
-  (aux_3, aux_4) <- subc f.[3] W64.zero cf;
+  (aux_3, aux_4) <- subc f.[3] W64.zero cf1;
   _3 <- aux_3;
   ff <- ff.[3 <- aux_4];
 
@@ -1029,16 +1029,17 @@ lemma equiv_to_bytes:
     ].
 proof.
     proc => />.
-    swap {2} 2 -1. swap{1} 9 -7. swap {1} 24 -1. inline *.
-    inline *.
+    swap {2} 2 -1. swap{1} 9 -7. swap {1} 24 -1.
     inline {2} 1.
-    seq 2 4 : (#pre /\ _tt{2} = t{1} /\ _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one). auto => />.
+    seq 2 4 : (#pre /\ _tt{2} = t{1}
+                    /\ _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one). auto => />.
     inline {2} 1.
-    seq  7 9 : (_tt{2} = t{1} /\ msb1{2} = f.[3]{1} /\
+    seq  7 9 : (_tt{2} = t{1} /\
+                _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
                 f.[0]{1} = f.[0]{2} /\
                 f.[1]{1} = f.[1]{2} /\
                 f.[2]{1} = f.[2]{2} /\
-                _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
+                msb1{2} = f.[3]{1} /\
                 msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6). auto => />.
     inline {2} 1.
     seq  2 4 : (_tt{2} = t{1} /\
@@ -1047,277 +1048,97 @@ proof.
                 f.[1]{1} = f.[1]{2} /\
                 f.[2]{1} = f.[2]{2} /\
                 msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
-                _tt0{2} = f.[3]{1} /\ _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 ). auto => />.
+                _tt0{2} = f.[3]{1} /\
+                _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19). auto => />.
     inline {2} 1.
-    seq  10 15 : (_tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
-                 msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
-                 _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
-                 f0{2} = f{2} /\ _tt0{2} = f.[3]{1} /\
-                 tt0{2} = t{1} /\
-                 (* ff0{2} = add_to_limb f0{2} _tt{2} (W64.to_uint tt0{2}) /\ *)
-                 ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
-                 f.[0]{1} = ff0.[0]{2} /\ f.[1]{1} = ff0.[1]{2} /\
-                 f.[2]{1} = ff0.[2]{2} /\ ff{2} = ff0{2} /\ ff{2}.[3] = t{1}). auto => />.
-    move => &1 &2 [#] H H0 H1 H2. do split.
-    rewrite H H0 H1 H2 //=. rewrite H //=. rewrite H H0 //=. rewrite H H0 H1 //=.
-    rewrite H H0 H1 //=.
-    swap {2} 2 -1. swap {2} 4 -2. swap {1} 2 1.
+    seq  10 15 : (tt0{2} = t{1} /\
+                  _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
+                  msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
+                  _tt0{2} = f.[3]{1} /\
+                  _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
+                  f0{2} = f{2} /\
+                  ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
+                  ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
+                  ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
+                  ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
+                  f.[0]{1} = ff0.[0]{2} /\
+                  f.[1]{1} = ff0.[1]{2} /\
+                  f.[2]{1} = ff0.[2]{2} /\
+                  ff{2} = ff0{2} /\
+                  ff{2}.[3] = t{1}). auto => />.
+    move => &1 &2 [#] H H0 H1 H2. do split. rewrite H H0 H1 //=. rewrite H //=.
+    rewrite H H0 //=. rewrite H H0 H1 H2 //=. rewrite H H0 H1 //=.
+
     inline {2} 1.
-    seq  2 5 : (_tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
-                 msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
-                 _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
-                 f0{2} = f{2} /\
-                 f.[3]{1} = _f3{2} /\
-                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
-                 (* ff0{2} = add_to_limb f0{2} _tt{2} (W64.to_uint tt0{2}) /\ *)
-                 ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
-                 ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
-                 ff2{2} = ff{2}.[3 <- _f3{2}] /\
-                 ff2{2}.[3] = f{1}.[3] /\
-                 f.[0]{1} = ff0.[0]{2} /\ f.[1]{1} = ff0.[1]{2} /\
-                 f.[2]{1} = ff0.[2]{2} /\ ff{2} = ff0{2} /\ ff{2}.[3] = t{1}). auto => />.
-    inline {2} 1.
-    seq 1 9 : (_tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
+    seq  2 5 : ( _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
                  msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
                  _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
                  f0{2} = f{2} /\
-                 f.[3]{1} = _f3{2} /\
-                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
-                 (* ff0{2} = add_to_limb f0{2} _tt{2} (W64.to_uint tt0{2}) /\ *)
                  ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
+                 f.[0]{1} = ff0.[0]{2} /\
+                 f.[1]{1} = ff0.[1]{2} /\
+                 f.[2]{1} = ff0.[2]{2} /\
+                 f.[3]{1} = _f3{2} /\
+                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
                  ff2{2} = ff{2}.[3 <- _f3{2}] /\
                  ff2{2}.[3] = f{1}.[3] /\
-                 f.[0]{1} = ff0.[0]{2} /\ f.[1]{1} = ff0.[1]{2} /\
-                 f.[2]{1} = ff0.[2]{2} /\ ff{2} = ff0{2} /\
-                 msb2{2} = (SAR_64 ff{2}.[3] ((of_int 63))%W8).`6 /\
-                 msb2{2} = t{1}). auto => />.
+                 ff{2} = ff0{2} /\
+                 ff{2}.[3] = t{1}). auto => />.
+
     inline {2} 1.
-    inline {2} 1.
-    seq 1 9 : (_tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
+    seq 3 5 : (  _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
                  msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
                  _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
                  f0{2} = f{2} /\
-                 f.[3]{1} = _f3{2} /\
-                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
-                 (* ff0{2} = add_to_limb f0{2} _tt{2} (W64.to_uint tt0{2}) /\ *)
                  ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
                  ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
+                 f.[0]{1} = ff0.[0]{2} /\
+                 f.[1]{1} = ff0.[1]{2} /\
+                 f.[2]{1} = ff0.[2]{2} /\
+                 f.[3]{1} = _f3{2} /\
+                 ff{2} = ff0{2} /\
+                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
                  ff2{2} = ff{2}.[3 <- _f3{2}] /\
                  ff2{2}.[3] = f{1}.[3] /\
-                 f.[0]{1} = ff0.[0]{2} /\ f.[1]{1} = ff0.[1]{2} /\
-                 f.[2]{1} = ff0.[2]{2} /\ ff{2} = ff0{2} /\
-                 msb2{2} = (SAR_64 ff{2}.[3] ((of_int 63))%W8).`6 /\
-                 msb2{2} = t{1}). auto => />.
-    + apply Array4.ext_eq => i ib. rewrite !addcE !/carry_add !b2i0 => />.
-    rewrite !get_setE 1..4:/#.
-    + case(i = 3) => C. rewrite C => />.
-    + case(i = 2) => C0. rewrite C0 => />.
-    + case(i = 1) => C1. rewrite C1 => />.
-    + case(i = 0) => C2. rewrite C2 => />. smt().
+                 _tt2{2} = t{1}
+                 ). auto => />.
 
-    seq 2 1: (#pre /\ t{1} = _tt{2} /\ _tt{2} = f{2}.[3] /\ 0 <= valRep4 f{2} < p).
-    + ecall {2} (ph_msb_not_set f{2}.[3]). auto => />.
-    + move => &2. do split.
-    + smt(W64.to_uint_cmp).
-    + move: limb4_lt_2_255_cmp W64.to_uint_cmp pVal; 1:smt().
-    + move => H1 H2. rewrite helper_lemma_msb_is_not_set /#.
-
-    seq 6 1 : (#pre /\ extracted_msbw{2} = W64.zerow /\ aux_4{1} = extracted_msbw{2}).
-    + auto => />. ecall {2} (ph_extract_msb0). auto => />.
-    + move => &2 H H0. do split.
-    + smt(W64.to_uint_cmp).
-    + move: H H0 limb4_ltP_cmp. smt(). move => *.
-    + rewrite helper_lemma_extract_msb_0 /#.
-
-    seq 1 0 : (0 <= valRep4 f{1} && valRep4 f{1} < p - W64.to_uint (f.[3]{2}) /\ t{1} = _tt{2}
-               /\ _tt{2} = f{2}.[3] /\
-               0 <= valRep4 f{2} && valRep4 f{2} < p /\ extracted_msbw{2} = W64.zerow /\
-               aux_4{1} = extracted_msbw{2} /\
-               f{1} = Array4.of_list witness [f.[0]{2}; f.[1]{2}; f.[2]{2}; extracted_msbw{2}]).
-    + auto => />. move => &2 H H0. do split.
-    + rewrite valRep4_cmp //=. move => H3. do split.
-    + rewrite valRep4_remove_limb4_ltP //=.
-    + rewrite valRep4_remove_limb4_ltP_structure //=.
-
-    seq 2 1 : (0 <= valRep4 f{1} && valRep4 f{1} < p - (W64.to_uint f.[3]{2}) + 19 * pow 2 192 /\
-               t{1} = _tt{2} /\ _tt{2} = f{2}.[3] /\ 0 <= valRep4 f{2} && valRep4 f{2} < p
-               /\ extracted_msbw{2} = W64.zerow /\
-               tt0{2} = W64.of_int 19 /\  /\
-               f{1} = Array4.of_list witness [f.[0]{2}; f.[1]{2}; f.[2]{2}; tt0{2}]).
-   + ecall {2} (ph_to_19). auto => />. move => &2 [#] H H0 H1 H2.
-   + have E: W64.zerow `&` (of_int 19)%W64 + (of_int 19)%W64 = W64.of_int 19. smt(@W64).
-   + do split. rewrite valRep4_cmp //=. move => H3. do split.
-   + move: H H0. rewrite !valRep4E pE !/to_list !/val_digits !/mkseq -!iotaredE => />.
-   + rewrite E to_uint0 //=. smt(W64.to_uint_cmp).
-   + rewrite E. apply Array4.ext_eq => i ib. rewrite get_setE //=. smt(Array4.initE).
-
-    seq 10 1 : (0 <= valRep4 f{2} && valRep4 f{2} < p
-               /\ extracted_msbw{2} = W64.zerow /\ _tt{2} = f{2}.[3]
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = (add_to_limb f{2} _tt{2} 19) /\ f{1}.[0] = add_l1 f{2} 19 /\
-               f{1}.[1] = add_l2 f{2} 19 /\ _tt{2} = f{2}.[3] /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = W64.of_int 19  /\ t{1} = add_l4 f{2} _tt{2} 19).
-   + ecall {2} (ph_addition f{2} _tt{2} 19). auto => />. move => &1 [#] H H0 H1 H2.
-   + do split. move: H2. rewrite pVal 1:/#. move: limb4_ltP_cmp. move: H1 H2. smt().
-   move => H3 H4 H5. do split. rewrite -H5. move: valRep4_cmp. smt(). move => H6.
-   rewrite -H5 pVal. rewrite -valRep4_equiv_representation. move: H2. rewrite pVal 1:/#.
-
-   swap{1} 3 -1.
-
-   seq 2 0 : (0 <= valRep4 f{2} && valRep4 f{2} < p /\ t{1} = add_l4 f{2} _tt{2} 19 /\
-               0 <= valRep4 f{1} && valRep4 f{1} < p + 19 /\ _tt{2} = f{2}.[3]
-               /\ extracted_msbw{2} = W64.zerow
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = add_to_limb f{2} _tt{2} 19 /\
-               f{1}.[0] = add_l1 f{2} 19 /\ f{1}.[1] = add_l2 f{2} 19 /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = ff.[3]{2}).
-   + auto => />. move => &1 &2 [#] H H0 H1 H2 H3 H4 H5 H6.
-   + rewrite valRep4_cmp //=.
-   + have !->: LEA_64 (add_l4 f{2} f{2}.[3] 19 + add_l4 f{2} f{2}.[3] 19) `>>` W8.one = add_l4 f{2} f{2}.[3] 19.
-   + rewrite helper_lemma_msb_is_not_set. move: H2. rewrite pVal.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />. move: W64.to_uint_cmp. smt().
-   + auto.
-   + move: H2. rewrite !valRep4E !pVal !/to_list !/val_digits !/mkseq -!iotaredE => />. smt().
-
-   seq 3 1 : (0 <= valRep4 f{2} && valRep4 f{2} < p /\
-               0 <= valRep4 f{1} && valRep4 f{1} < p + 19
-               /\ extracted_msbw{2} = W64.zerow /\ f{2} = f{2}
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = add_to_limb f{2} _tt{2} 19 /\ f{1}.[0] = add_l1 f{2} 19
-               /\ f{1}.[1] = add_l2 f{2} 19 /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = ff.[3]{2} /\ f3{2} = W64.of_int 19 /\
-               t{1} = W64.of_int 19).
-   + ecall {2} (ph_to_19_by_invw). auto => />. move => &1 &2 [#] H H0 H1 H2 H3 H4 H5 H6 H7 H8.
-   + do split. smt(W64.to_uint_cmp). move: H0 limb4_ltP_cmp. smt(). move => H9 H10.
-   + rewrite helper_lemma_to_19.
-   + move: H2. rewrite pVal.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />. move: W64.to_uint_cmp. smt().
-   + auto.
-
-   ecall {2} (ph_subtraction ff{2} 19). auto => />.
-   + move => &1 &2 H H0 H1 H2 H3 H4 H5 H6 H7 H8. do split. move: H4. smt(pVal).
-   + move => H9 H10. rewrite H5 H6 H7 H8.
-   + rewrite !addcE !/carry_add !b2i0 => />.
-   + rewrite !subcE !/borrow_sub !b2i0 => />.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />.
-qed.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-lemma equiv_to_bytes_no_reduction:
-    equiv[M.__tobytes4 ~ ToBytesSpec.to_bytes :
-      f{1} = f{2} /\ 0 <= valRep4 f{1} < p
-      ==>
-      valRep4 res{1} = valRep4 res{2}
-    ].
-proof.
-    proc => />.
-    swap {2} 2 -1. swap{1} 9 -7.
-    seq 2 1: (#pre /\ t{1} = _tt{2} /\ _tt{2} = f{2}.[3] /\ 0 <= valRep4 f{2} < p).
-    + ecall {2} (ph_msb_not_set f{2}.[3]). auto => />.
-    + move => &2 [#] H H0. do split.
-    + smt(W64.to_uint_cmp).
-    + move: H H0 limb4_lt_2_255_cmp W64.to_uint_cmp pVal; 1:smt().
-    + move => H1 H2. rewrite helper_lemma_msb_is_not_set /#.
-
-    seq 6 1 : (#pre /\ extracted_msbw{2} = W64.zerow /\ aux_4{1} = extracted_msbw{2}).
-    + auto => />. ecall {2} (ph_extract_msb0). auto => />.
-    + move => &2 H H0. do split.
-    + smt(W64.to_uint_cmp).
-    + move: H H0 limb4_ltP_cmp. smt(). move => *.
-    + rewrite helper_lemma_extract_msb_0 /#.
-
-    seq 1 0 : (0 <= valRep4 f{1} && valRep4 f{1} < p - W64.to_uint (f.[3]{2}) /\ t{1} = _tt{2}
-               /\ _tt{2} = f{2}.[3] /\
-               0 <= valRep4 f{2} && valRep4 f{2} < p /\ extracted_msbw{2} = W64.zerow /\
-               aux_4{1} = extracted_msbw{2} /\
-               f{1} = Array4.of_list witness [f.[0]{2}; f.[1]{2}; f.[2]{2}; extracted_msbw{2}]).
-    + auto => />. move => &2 H H0. do split.
-    + rewrite valRep4_cmp //=. move => H3. do split.
-    + rewrite valRep4_remove_limb4_ltP //=.
-    + rewrite valRep4_remove_limb4_ltP_structure //=.
-
-    seq 2 1 : (0 <= valRep4 f{1} && valRep4 f{1} < p - (W64.to_uint f.[3]{2}) + 19 * pow 2 192 /\
-               t{1} = _tt{2} /\ _tt{2} = f{2}.[3] /\ 0 <= valRep4 f{2} && valRep4 f{2} < p
-               /\ extracted_msbw{2} = W64.zerow /\
-               tt0{2} = W64.of_int 19 /\ f.[0]{1} = f.[0]{2} /\ f.[1]{1} = f.[1]{2} /\
-               f.[2]{1} = f.[2]{2} /\  f.[3]{1} = tt0{2} /\
-               f{1} = Array4.of_list witness [f.[0]{2}; f.[1]{2}; f.[2]{2}; tt0{2}]).
-   + ecall {2} (ph_to_19). auto => />. move => &2 [#] H H0 H1 H2.
-   + have E: W64.zerow `&` (of_int 19)%W64 + (of_int 19)%W64 = W64.of_int 19. smt(@W64).
-   + do split. rewrite valRep4_cmp //=. move => H3. do split.
-   + move: H H0. rewrite !valRep4E pE !/to_list !/val_digits !/mkseq -!iotaredE => />.
-   + rewrite E to_uint0 //=. smt(W64.to_uint_cmp).
-   + rewrite E. apply Array4.ext_eq => i ib. rewrite get_setE //=. smt(Array4.initE).
-
-    seq 10 1 : (0 <= valRep4 f{2} && valRep4 f{2} < p
-               /\ extracted_msbw{2} = W64.zerow /\ _tt{2} = f{2}.[3]
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = (add_to_limb f{2} _tt{2} 19) /\ f{1}.[0] = add_l1 f{2} 19 /\
-               f{1}.[1] = add_l2 f{2} 19 /\ _tt{2} = f{2}.[3] /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = W64.of_int 19  /\ t{1} = add_l4 f{2} _tt{2} 19).
-   + ecall {2} (ph_addition f{2} _tt{2} 19). auto => />. move => &1 [#] H H0 H1 H2.
-   + do split. move: H2. rewrite pVal 1:/#. move: limb4_ltP_cmp. move: H1 H2. smt().
-   move => H3 H4 H5. do split. rewrite -H5. move: valRep4_cmp. smt(). move => H6.
-   rewrite -H5 pVal. rewrite -valRep4_equiv_representation. move: H2. rewrite pVal 1:/#.
-
-   swap{1} 3 -1.
-
-   seq 2 0 : (0 <= valRep4 f{2} && valRep4 f{2} < p /\ t{1} = add_l4 f{2} _tt{2} 19 /\
-               0 <= valRep4 f{1} && valRep4 f{1} < p + 19 /\ _tt{2} = f{2}.[3]
-               /\ extracted_msbw{2} = W64.zerow
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = add_to_limb f{2} _tt{2} 19 /\
-               f{1}.[0] = add_l1 f{2} 19 /\ f{1}.[1] = add_l2 f{2} 19 /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = ff.[3]{2}).
-   + auto => />. move => &1 &2 [#] H H0 H1 H2 H3 H4 H5 H6.
-   + rewrite valRep4_cmp //=.
-   + have !->: LEA_64 (add_l4 f{2} f{2}.[3] 19 + add_l4 f{2} f{2}.[3] 19) `>>` W8.one = add_l4 f{2} f{2}.[3] 19.
-   + rewrite helper_lemma_msb_is_not_set. move: H2. rewrite pVal.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />. move: W64.to_uint_cmp. smt().
-   + auto.
-   + move: H2. rewrite !valRep4E !pVal !/to_list !/val_digits !/mkseq -!iotaredE => />. smt().
-
-   seq 3 1 : (0 <= valRep4 f{2} && valRep4 f{2} < p /\
-               0 <= valRep4 f{1} && valRep4 f{1} < p + 19
-               /\ extracted_msbw{2} = W64.zerow /\ f{2} = f{2}
-               /\ tt0{2} = W64.of_int 19 /\ 19 <= valRep4 ff{2} && valRep4 ff{2} < p+19 /\
-               ff{2} = add_to_limb f{2} _tt{2} 19 /\ f{1}.[0] = add_l1 f{2} 19
-               /\ f{1}.[1] = add_l2 f{2} 19 /\
-               f{1}.[2] = add_l3 f{2} 19 /\ f{1}.[3] = ff.[3]{2} /\ f3{2} = W64.of_int 19 /\
-               t{1} = W64.of_int 19).
-   + ecall {2} (ph_to_19_by_invw). auto => />. move => &1 &2 [#] H H0 H1 H2 H3 H4 H5 H6 H7 H8.
-   + do split. smt(W64.to_uint_cmp). move: H0 limb4_ltP_cmp. smt(). move => H9 H10.
-   + rewrite helper_lemma_to_19.
-   + move: H2. rewrite pVal.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />. move: W64.to_uint_cmp. smt().
-   + auto.
-
-   ecall {2} (ph_subtraction ff{2} 19). auto => />.
-   + move => &1 &2 H H0 H1 H2 H3 H4 H5 H6 H7 H8. do split. move: H4. smt(pVal).
-   + move => H9 H10. rewrite H5 H6 H7 H8.
-   + rewrite !addcE !/carry_add !b2i0 => />.
-   + rewrite !subcE !/borrow_sub !b2i0 => />.
-   + rewrite !valRep4E !/to_list !/val_digits !/mkseq -!iotaredE => />.
+    inline {2} 1.
+    seq 12 14: (
+                 _tt{2} = (f.[3]{2} + f.[3]{2}) `>>` W8.one /\
+                 msb1{2} = (SAR_64 f{2}.[3] ((of_int 63))%W8).`6 /\
+                 _tt0{2} = msb1{2} `&` W64.of_int 19 + W64.of_int 19 /\
+                 f0{2} = f{2} /\
+                 ff0{2}.[0] = add_l1 f0{2} (W64.to_uint _tt0{2}) /\
+                 ff0{2}.[1] = add_l2 f0{2} (W64.to_uint _tt0{2}) /\
+                 ff0{2}.[2] = add_l3 f0{2} (W64.to_uint _tt0{2}) /\
+                 ff0{2}.[3] = add_l4 f0{2} _tt{2} (W64.to_uint _tt0{2}) /\
+                 ff1{2}.[0] = sub_l1 f1{2} (W64.to_uint _tt2{2}) /\
+                 ff1{2}.[1] = sub_l2 f1{2} (W64.to_uint _tt2{2}) /\
+                 ff1{2}.[2] = sub_l3 f1{2} (W64.to_uint _tt2{2}) /\
+                 ff1{2}.[3] = sub_l4 f1{2} (W64.to_uint _tt2{2}) /\
+                 f1{2} = ff2{2} /\
+                 operand20{2} = _tt2{2} /\
+                 _tt2{2} = t{1} /\
+                 f.[0]{1} = ff1.[0]{2} /\
+                 f.[0]{1} = ff1.[0]{2} /\
+                 f.[1]{1} = ff1.[1]{2} /\
+                 f.[2]{1} = ff1.[2]{2} /\
+                 f.[3]{1} = ff1.[3]{2} /\
+                 ff{2} = ff0{2} /\
+                 _f3{2} = (ff.[3]{2} + ff.[3]{2}) `>>` W8.one /\
+                 ff2{2} = ff{2}.[3 <- _f3{2}]). auto => />.
+    + move => &1 &2 H H0 H1 H2 H3 H4 H5 H6. do split.
+    rewrite -H3 //=. rewrite -H3 //=. rewrite -H3 //=.
+    rewrite -H4 //=. rewrite -H3 -H4 -H5 //=. rewrite -H3 -H4 -H5 //=.
+    seq 0 1: (#pre /\ ff3{2} = ff1{2}). auto => />.
+    auto => />.
+    move => &1 &2 H H0 H1 H2 H3 H4 H5 H6 H7 H8 H9 H10.
+    rewrite valRep4_equiv_representation.  rewrite H7 H8 H9 H10.
+    by rewrite -valRep4_equiv_representation.
 qed.

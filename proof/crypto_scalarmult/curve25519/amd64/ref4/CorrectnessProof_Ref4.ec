@@ -1,7 +1,7 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
 require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Sqr4RefExtracted. (* must be in this order so module names do not clash *)
-require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline Jcheck.
+require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline Jcheck CorrectnessProof_ToBytes.
 
 import Zp Ring.IntID.
 
@@ -509,15 +509,47 @@ proof.
     by conseq ill_set_last_bit_to_zero64 (eq_set_last_bit_to_zero64_ref4 x).
 qed.
 
-lemma h_to_bytes_ref4_0 r:
+lemma h_to_bytes_ref4 _f:
   hoare [M.__tobytes4 :
-      r = ff /\ 0 <= valRep4 r < p
+      _f = f
       ==>
-      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 r)))
+      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
   ].
 proof.
-    admit.
+    have E: 0 <= valRep4 _f < W256.modulus. apply valRep4_cmp.
+    case (0 <= valRep4 _f < p) => C1.
+    conseq equiv_to_bytes (: _f = arg /\ 0 <= valRep4 _f < p ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_no_reduction _f).
+
+    case (p <= valRep4 _f < pow 2 255) => C2.
+    conseq equiv_to_bytes (: _f = arg /\ p <= valRep4 _f < pow 2 255 ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C2. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminusP_part1 _f).
+
+    case (pow 2 255 <= valRep4 _f < 2*p) => C3.
+    conseq equiv_to_bytes (: _f = arg /\ pow 2 255 <= valRep4 _f < 2*p ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C3. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminusP_part2 _f).
+
+    case (2*p <= valRep4 _f < W256.modulus) => C4.
+    conseq equiv_to_bytes (: _f = arg /\ 2*p <= valRep4 _f < W256.modulus ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C4. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminus2P _f). smt().
 qed.
+
 
 lemma ill_to_bytes_ref4 : islossless M.__tobytes4 by islossless.
 
