@@ -1022,7 +1022,7 @@ qed.
 
 
 lemma equiv_to_bytes:
-    equiv[M.__tobytes4 ~ ToBytesSpec.to_bytes :
+    equiv[Ref4_scalarmult_s.M.__tobytes4 ~ ToBytesSpec.to_bytes :
       f{1} = f{2}
       ==>
       valRep4 res{1} = valRep4 res{2}
