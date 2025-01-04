@@ -489,7 +489,6 @@ proof.
     apply (h_to_bytes_cminus2P _f). smt().
 qed.
 
-
 lemma ill_to_bytes_ref4 : islossless M.__tobytes4 by islossless.
 
 lemma ph_to_bytes_ref4 r:
@@ -670,7 +669,7 @@ proof.
     rewrite (W64.and_mod 3 ctr{2}) //=  (W64.and_mod 6 (of_int (to_uint ctr{2} %% 8))%W64) //= !to_uint_shr //= !shr_shrw.
     smt(W64.to_uint_cmp  W64.of_uintK W64.to_uintK).
     rewrite /zeroextu64 /truncateu8 //=  !of_uintK => />.
-    + rewrite  of_intE modz_small.  apply bound_abs. smt(W8.to_uint_cmp JUtils.expS_minus JUtils.exp2_0).
+    + rewrite of_intE modz_small. apply bound_abs. smt(W8.to_uint_cmp JUtils.powS_minus JUtils.pow2_0).
     rewrite bits2wE /int2bs /mkseq -iotaredE => />.
     auto => />.
     rewrite (modz_small (to_uint ctr{2} %% 8) W64.modulus). apply bound_abs. smt(W64.to_uint_cmp).

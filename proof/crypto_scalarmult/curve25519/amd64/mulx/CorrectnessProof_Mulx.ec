@@ -340,7 +340,6 @@ proof.
 qed.
 
 (** to bytes **)
-(** to bytes **)
 equiv eq_spec_impl_to_bytes_mulx : Ref4_scalarmult_s.M.__tobytes4 ~ Mulx_scalarmult_s.M.__tobytes4 :
     ={f} ==> ={res} by sim.
 
