@@ -1,6 +1,6 @@
 require import Real Bool Int IntDiv.
-from Jasmin require import JModel.
-require import Curve25519_Procedures Ref4_scalarmult_s Zp_limbs Zp_25519.
+from Jasmin require import JModel JUtils.
+require import Curve25519_Procedures Ref4_scalarmult_s Zp_limbs Zp_25519 CorrectnessProof_ToBytes.
 
 import Zp Ring.IntID.
 
@@ -448,16 +448,47 @@ proof.
 qed.
 
 (** to bytes **)
-lemma h_to_bytes_ref4 r:
+lemma h_to_bytes_ref4 _f:
   hoare [M.__tobytes4 :
-      r = f
+      _f = f
       ==>
-      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 r)))
+      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
   ].
 proof.
-    proc.
-    admit.
+    have E: 0 <= valRep4 _f < W256.modulus. apply valRep4_cmp.
+    case (0 <= valRep4 _f < p) => C1.
+    conseq equiv_to_bytes (: _f = arg /\ 0 <= valRep4 _f < p ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_no_reduction _f).
+
+    case (p <= valRep4 _f < exp 2 255) => C2.
+    conseq equiv_to_bytes (: _f = arg /\ p <= valRep4 _f < exp 2 255 ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C2. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminusP_part1 _f).
+
+    case (exp 2 255 <= valRep4 _f < 2*p) => C3.
+    conseq equiv_to_bytes (: _f = arg /\ exp 2 255 <= valRep4 _f < 2*p ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C3. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminusP_part2 _f).
+
+    case (2*p <= valRep4 _f < W256.modulus) => C4.
+    conseq equiv_to_bytes (: _f = arg /\ 2*p <= valRep4 _f < W256.modulus ==>
+      (valRep4 res = asint (inzpRep4 _f))).
+    move => &1 [#] H. exists _f. move: C4. smt().
+    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
+    rewrite -H1 valRep4ToPack to_uintK //=.
+    apply (h_to_bytes_cminus2P _f). smt().
 qed.
+
 
 lemma ill_to_bytes_ref4 : islossless M.__tobytes4 by islossless.
 
@@ -639,7 +670,7 @@ proof.
     rewrite (W64.and_mod 3 ctr{2}) //=  (W64.and_mod 6 (of_int (to_uint ctr{2} %% 8))%W64) //= !to_uint_shr //= !shr_shrw.
     smt(W64.to_uint_cmp  W64.of_uintK W64.to_uintK).
     rewrite /zeroextu64 /truncateu8 //=  !of_uintK => />.
-    + rewrite  of_intE modz_small.  apply bound_abs. smt(W8.to_uint_cmp JUtils.powS_minus JUtils.pow2_0).
+    + rewrite  of_intE modz_small.  apply bound_abs. smt(W8.to_uint_cmp JUtils.expS_minus JUtils.exp2_0).
     rewrite bits2wE /int2bs /mkseq -iotaredE => />.
     auto => />.
     rewrite (modz_small (to_uint ctr{2} %% 8) W64.modulus). apply bound_abs. smt(W64.to_uint_cmp).
