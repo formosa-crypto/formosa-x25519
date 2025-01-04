@@ -7,7 +7,6 @@ import Zp Ring.IntID IntOrder BS2Int.
 
 require import Array4 Array32 WArray32.
 
-(* Spec to prove smaller parts of ToBytes and then compose the, *)
 module ToBytesSpec = {
 
  proc extract_msb(f3: W64.t) : W64.t = {
