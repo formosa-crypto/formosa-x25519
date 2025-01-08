@@ -2,7 +2,7 @@ require import Real Bool Int IntDiv.
 from Jasmin require import JModel.
 
 require import Curve25519_Procedures Zp_limbs Zp_25519.
-from JazzEC require import X25519_ref4_scalarmult_s.
+from JazzEC require import Ref4_scalarmult_s.
 
 import Zp Ring.IntID.
 
