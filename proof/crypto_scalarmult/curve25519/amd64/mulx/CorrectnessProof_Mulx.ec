@@ -1,10 +1,14 @@
 require import Real Bool Int IntDiv.
 from Jasmin require import JModel.
-require import CorrectnessProof_Ref4 Curve25519_Procedures Ref4_scalarmult_s Mulx_scalarmult_s Zp_limbs Zp_25519.
+
+require import Zp_limbs Zp_25519 Curve25519_Procedures.
+require import CorrectnessProof_Ref4.  
+
+from JazzEC require import Ref4_scalarmult_s Mulx_scalarmult_s.
+from JazzEC require import Array4 Array32.
 
 import Zp Ring.IntID.
 
-require import Array4 Array32.
 
 abbrev zexp = ZModpRing.exp.
 

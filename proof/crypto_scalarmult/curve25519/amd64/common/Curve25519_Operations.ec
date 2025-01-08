@@ -1,10 +1,12 @@
 require import Bool List Int IntDiv.
+
 from Jasmin require import JModel.
+
 require import Curve25519_Spec Zp_25519 Zp_limbs EClib.
 
 import Zp StdOrder.IntOrder Ring.IntID.
 
-require import Array4.
+from JazzEC require import Array4.
 
 (* sets last bit to 0 *)
 op last_bit_to_zero64 (x: Rep4) : Rep4 = let x = x.[3 <- x.[3].[63 <- false]] in x.

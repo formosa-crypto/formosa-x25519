@@ -1,10 +1,12 @@
 require import Real Bool Int IntDiv.
 from Jasmin require import JModel.
-require import Curve25519_Procedures Ref4_scalarmult_s Zp_limbs Zp_25519.
+
+require import Curve25519_Procedures Zp_limbs Zp_25519.
+from JazzEC require import X25519_ref4_scalarmult_s.
 
 import Zp Ring.IntID.
 
-require import Array4 Array32.
+from JazzEC require import Array4 Array32.
 
 (** hoares, lossless and phoares **)
 lemma h_add_rrs_ref4 (_f _g: zp):
@@ -698,7 +700,7 @@ equiv eq_spec_impl_init_points_ref4 :
         res{1}.`4 = inzpRep4 res{2}.`4.
 proof.
     proc.
-    wp. unroll for{2} ^while. wp. skip. move => &1 &2 H H0 H1 H2 H3 H4 H5 H6.
+    wp. unroll for*{2} ^while. wp. skip. move => &1 &2 H H0 H1 H2 H3 H4 H5 H6.
     split; auto => />. rewrite /H4 /H0 /H2 /H3 /Zp.one /set0_64_ /inzpRep4 => />.
         rewrite /valRep4 /to_list /mkseq -iotaredE => />.
     split; auto => />. rewrite /H5  /H0 /H3 /H2 /Zp.zero /set0_64_ /inzpRep4 => />.
