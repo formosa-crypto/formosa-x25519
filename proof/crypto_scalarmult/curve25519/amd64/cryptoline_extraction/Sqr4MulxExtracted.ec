@@ -352,7 +352,7 @@ lemma __reduce4_assume_ _x _r __38 _z _cf _of :
       (true => (validk Assume (trace res)))].
 proof.
     proc. auto => />. move => H H0 H1. 
-    smt(@JUtils @Zp_25519 @Jcheck @W64).
+    smt(JUtils.pow2_64 W64.to_uint_small).
 qed.
 
 lemma __reduce4_assume _x _r __38 _z _cf _of :
@@ -384,12 +384,12 @@ proof.
     ecall (__reduce4_assume h r _38 z cf of_0).     
     seq 2: (#pre /\ validk Assume trace___sqr4_rr). auto.
     seq 62: (#pre). auto => />.
-    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(@JUtils @W64 @Jcheck @Zp_25519).
+    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(valid_cat).
     seq 53: (#pre). auto => />.
-    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(@JUtils @W64 @Jcheck @Zp_25519).
+    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(valid_cat).
     auto => />.
     move => &hr H H0 H1 H2.
-    rewrite !/trace //= !validk_cat //=; 1:smt(@JUtils @W64 @Jcheck @Zp_25519).
+    rewrite !/trace //= !validk_cat //=; 1:smt(valid_cat).
 qed.
 
 lemma __sqr4_rr_assume _f :

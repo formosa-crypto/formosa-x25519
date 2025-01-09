@@ -188,7 +188,7 @@ proof.
     + rewrite to_uintB //= uleE of_uintK pmod_small //=.
     + move: H1 H2 W64.to_uint_cmp. smt().
     move => H2. do split. by rewrite H2. move => H3. 
-    smt(@W64 @Jcheck @Zp_25519 @IntOrder @JUtils).    
+    smt(JUtils.pow2_64 W64.to_uint_small).    
 qed.
 
 lemma __tobytes4_assume _f :

@@ -14,10 +14,10 @@ proof.
     unroll for{2} ^while. auto => />.
     move => *. rewrite !/copy_64 !/set0_64_ => />. 
     apply Array4.ext_eq. move => i ib. rewrite !get_setE 1..18://=.
-    case (i = 0) => I0. smt(@W64).
-    case (i = 1) => I1. smt(@W64).
-    case (i = 2) => I2. smt(@W64).
-    case (i = 3) => I3. smt(@W64). smt().      
+    case (i = 0) => I0. smt(W64.of_intN' W64.of_intS).
+    case (i = 1) => I1. smt(W64.of_intN' W64.of_intS).
+    case (i = 2) => I2. smt(W64.of_intN' W64.of_intS).
+    case (i = 3) => I3. smt(W64.of_intN' W64.of_intS). smt().      
 qed.
 
 lemma __sub4_rss_cryptoline_equiv_ref4  :
@@ -30,10 +30,10 @@ proof.
     unroll for{2} ^while. auto => />.
     move => *. rewrite !/copy_64 !/set0_64_ => />. 
     apply Array4.ext_eq. move => i ib. rewrite !get_setE 1..18://=.
-    case (i = 0) => I0. smt(@W64).
-    case (i = 1) => I1. smt(@W64).
-    case (i = 2) => I2. smt(@W64).
-    case (i = 3) => I3. smt(@W64). smt().  
+    case (i = 0) => I0. smt(W64.WRingA.oppr0  W64.WRingA.subr0).
+    case (i = 1) => I1. smt(W64.WRingA.oppr0  W64.WRingA.subr0).
+    case (i = 2) => I2. smt(W64.WRingA.oppr0  W64.WRingA.subr0).
+    case (i = 3) => I3. smt(W64.WRingA.oppr0  W64.WRingA.subr0). smt().  
 qed.
 
 lemma __reduce_cryptoline_equiv_ref4  :
@@ -46,10 +46,10 @@ proof.
     unroll for{2} ^while. auto => />.
     move => *. rewrite !/copy_64 !/set0_64_ => />. 
     apply Array4.ext_eq. move => i ib. rewrite !get_setE 1..26://=.
-    case (i = 0) => I0. smt(@W64).
-    case (i = 1) => I1. smt(@W64).
-    case (i = 2) => I2. smt(@W64).
-    case (i = 3) => I3. smt(@W64). smt().    
+    case (i = 0) => I0. smt(W64.of_intN' W64.of_intS).
+    case (i = 1) => I1. smt(W64.of_intN' W64.of_intS).
+    case (i = 2) => I2. smt(W64.of_intN' W64.of_intS).
+    case (i = 3) => I3. smt(W64.of_intN' W64.of_intS). smt().    
 qed.
 
 lemma __reduce_cryptoline_equiv_sqr_ref4  :
@@ -62,10 +62,10 @@ proof.
     unroll for{2} ^while. auto => />.
     move => *. rewrite !/copy_64 !/set0_64_ => />. 
     apply Array4.ext_eq. move => i ib. rewrite !get_setE 1..26://=.
-    case (i = 0) => I0. smt(@W64).
-    case (i = 1) => I1. smt(@W64).
-    case (i = 2) => I2. smt(@W64).
-    case (i = 3) => I3. smt(@W64). smt(). 
+    case (i = 0) => I0. smt(W64.of_intN' W64.of_intS).
+    case (i = 1) => I1. smt(W64.of_intN' W64.of_intS).
+    case (i = 2) => I2. smt(W64.of_intN' W64.of_intS).
+    case (i = 3) => I3. smt(W64.of_intN' W64.of_intS). smt(). 
 qed.
 
 lemma __mul4_rss_cryptoline_equiv_ref4  :
@@ -94,10 +94,10 @@ proof.
     proc. auto => />.
     move => *. rewrite !/copy_64 !/set0_64_ => />. 
     apply Array4.ext_eq. move => i ib. rewrite !get_setE 1..24://=.
-    case (i = 0) => I0. smt(@W64).
-    case (i = 1) => I1. smt(@W64).
-    case (i = 2) => I2. smt(@W64).
-    case (i = 3) => I3. smt(@W64). smt().  
+    case (i = 0) => I0. smt(W64.of_intN' W64.of_intS).
+    case (i = 1) => I1. smt(W64.of_intN' W64.of_intS).
+    case (i = 2) => I2. smt(W64.of_intN' W64.of_intS).
+    case (i = 3) => I3. smt(W64.of_intN' W64.of_intS). smt().  
 qed.
 
 lemma __sqr4_rs_cryptoline_equiv_ref4  :

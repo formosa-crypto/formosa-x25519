@@ -25,5 +25,5 @@ lemma modz_minus x d:
 lemma divz_div a b c:
  0 < b => 0 < c => a %/ b %/ c = a %/ (b * c).
 proof.
-move=> *. smt(@IntDiv).
+move=> *. smt(IntDiv.divzMl).
 qed.

@@ -974,7 +974,7 @@ proc. simplify. wp. sp.
     move => H6 H7 H8 H9. split. split. apply H9. split.
     rewrite to_uintB. rewrite  uleE => />. by smt(). rewrite to_uint1 H0 //.
     split. move: H1. smt(). move: H2. smt(). split. rewrite H0. move => H10.
-    smt(@W32 W32.WRingA.subrK).
+    smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
     smt(W32.to_uintK' W32.WRingA.subrr).
     skip. auto => />. wp.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w /ZF_of => /=.
@@ -983,7 +983,7 @@ proc. simplify. wp. sp.
     rewrite to_uintB. rewrite uleE => />. move: H. smt().
     rewrite to_uint1 //. split. move: H0. smt(). move: H. smt().
     split. move => H1.
-    smt(W32.ge2_modulus @W32 W32.WRingA.subrK).
+    smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
     move => H1. move: H. smt().
 qed.
 

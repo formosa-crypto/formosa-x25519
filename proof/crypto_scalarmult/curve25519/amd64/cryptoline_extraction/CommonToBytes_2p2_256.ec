@@ -196,7 +196,7 @@ proof.
     rewrite !addcE !/carry_add !b2i0 => />.
     move: E0 pVal (W64.to_uint_cmp _f.[3]) (limb4_geq2p_cmp _f). rewrite !pVal => />. 
     move => L L0 L1 L2 L3. 
-    have L4: _f.[3] = W64.of_int 18446744073709551615. smt(@W64).
+    have L4: _f.[3] = W64.of_int 18446744073709551615. smt(W64.to_uintK).
     rewrite L4 //=.
     have ->:  18446744073709551616 <= u64i _f.[0] + 38 = true.
     + move: L L0. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
@@ -211,7 +211,7 @@ proof.
     + move => L L0. move: W64.to_uint_cmp. smt().
     rewrite !b2i1 => />.
     rewrite of_uintK pmod_small //=.
-    smt(@W64).
+    smt(W64.to_uint_cmp W64.of_uintK).
 qed.
 
 lemma __tobytes4_assume _f :

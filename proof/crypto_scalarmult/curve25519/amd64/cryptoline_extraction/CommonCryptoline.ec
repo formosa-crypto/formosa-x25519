@@ -48,10 +48,10 @@ proof.
     do split.          
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. move => H. rewrite /idfun -pE -!inzpK !inzpD inzpN !H -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).
+    smt(Zp_25519.two_pow255E).
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. rewrite /idfun -pE -!inzpK !inzpD inzpN -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).       
+    smt(Zp_25519.two_pow255E).       
 qed.
 
 
@@ -69,10 +69,10 @@ proof.
       split.
       rewrite -!limbs_are_same.             
       rewrite !inzpRep4E. move => H. rewrite /idfun -pE -!inzpK !inzpD inzpN !H -!inzpD //= !inzpK => />.
-      smt(@Zp_25519 @IntDiv).
+      smt(Zp_25519.two_pow255E).
       rewrite -!limbs_are_same.             
       rewrite !inzpRep4E. rewrite /idfun -pE -!inzpK !inzpD inzpN -!inzpD //= !inzpK => />.
-      smt(@Zp_25519 @IntDiv).      
+      smt(Zp_25519.two_pow255E).      
 qed.
 
 lemma mul4_equiv_contract (xa ya h: Rep4) :
@@ -89,10 +89,10 @@ proof.
     do split.          
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. move => H. rewrite /idfun -pE -!inzpK !inzpD inzpN !H -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).
+    smt(Zp_25519.two_pow255E).
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. rewrite /idfun -pE -!inzpK !inzpD inzpN -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).          
+    smt(Zp_25519.two_pow255E).          
 qed.
 
 
@@ -110,10 +110,10 @@ proof.
     do split.          
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. move => H. rewrite /idfun -pE -!inzpK !inzpD inzpN !H -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).
+    smt(Zp_25519.two_pow255E).
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. rewrite /idfun -pE -!inzpK !inzpD inzpN -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).      
+    smt(Zp_25519.two_pow255E).      
 qed.
 
 
@@ -131,10 +131,10 @@ proof.
     do split.          
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. move => H. rewrite /idfun -pE -!inzpK !inzpD inzpN !H -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).
+    smt(Zp_25519.two_pow255E).
     rewrite -!limbs_are_same.             
     rewrite !inzpRep4E. rewrite /idfun -pE -!inzpK !inzpD inzpN -!inzpD //= !inzpK => />.
-    smt(@Zp_25519 @IntDiv).
+    smt(Zp_25519.two_pow255E).
 qed.
 
 lemma tobytes_equiv_contract (h _f: Rep4) :
@@ -173,14 +173,15 @@ proof.
     rewrite -E0 E2 of_uintK (pmod_small (asint (inzpRep4 _f)) (pow 2 256)) //=.
     + smt(ge0_asint gtp_asint pVal).
     move: E3. rewrite !inzpRep4E. move => E3. rewrite inzpK.
-    smt(@Zp_25519).
+    smt(Zp_25519.two_pow255E).
     
     move => H H2.
     have E2: 0 <= valRep4 h && valRep4 h < p.
-        + rewrite -E0. smt(@W256 @Zp_limbs @Zp_25519).
+        + rewrite -E0. smt(Zp_25519.two_pow255E W256.to_uint_cmp W256.to_uint_small).
     move => H3.  
     have E3: W256.to_uint (limbs_4u64 (to_list h)) = (asint (inzpRep4 _f)).
     + rewrite /to_list /mkseq -iotaredE //= E0. rewrite inzpRep4E inzpK.
-    smt(@Zp_25519 @W256 @Zp_limbs @W64 @IntDiv pVal).
-    smt(@Zp_25519 @W256 @Zp_limbs @W64 @IntDiv pVal).
+    smt(Zp_25519.two_pow255E W256.to_uint_cmp W256.to_uint_small).
+    rewrite -E3.
+    smt(Zp_25519.two_pow255E W256.to_uint_cmp W256.to_uint_small).
 qed.

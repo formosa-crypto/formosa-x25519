@@ -678,11 +678,11 @@ proc; simplify.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of to_uintB.
     + rewrite uleE to_uint1. smt(). rewrite -to_uintB. rewrite uleE. smt(W32.to_uint_cmp).
     + rewrite to_uintB. rewrite uleE to_uint1; smt(). rewrite to_uint1.
-    smt(@W32 W32.ge2_modulus W32.of_uintK W32.WRingA.addrC W32.WRingA.addNr W32.WRingA.subrK).
+    smt(W32.to_uint_cmp  W32.to_uint_mod  W32.to_uint0 W32.to_uint1 W32.to_uintD_small  W32.WRingA.addrC  W32.WRingA.addNr W32.WRingA.subrK).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
   smt(W32.to_uintK W32.of_intD).
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-    smt(W32.ge2_modulus @W32 W32.WRingA.subrK).
+    smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
   wp. symmetry. call eq_spec_impl__sqr_rr_mulx. wp. call eq_spec_impl__sqr_rr_mulx. wp.
   symmetry.
   skip => />. move => &1 H.
@@ -692,11 +692,11 @@ proc; simplify.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
   rewrite to_uintB. rewrite uleE to_uint1. smt(W32.to_uint_cmp). rewrite to_uint1 //.
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
- smt(W32.ge2_modulus @W32 W32.WRingA.subrK).
+ smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
 rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
  smt(W32.to_uintK W32.of_intD).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-  smt(W32.ge2_modulus @W32 W32.WRingA.subrK).
+  smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
 qed.
 
 (*

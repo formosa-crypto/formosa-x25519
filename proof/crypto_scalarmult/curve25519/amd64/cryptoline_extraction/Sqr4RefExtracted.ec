@@ -383,12 +383,12 @@ lemma __sqr4_rs_assume_ _xa :
 proof.
     proc. wp.
     seq 2: (#pre /\ validk Assume (trace___sqr4_rs)). auto => />.
-    seq 30: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
-    seq 13: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
-    seq 19: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
-    seq 23: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
-    seq 35: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
-    seq 10: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(@Jcheck @W64 @JUtils).  
+    seq 30: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
+    seq 13: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
+    seq 19: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
+    seq 23: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
+    seq 35: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
+    seq 10: (#pre). auto => />. move => &hr H. rewrite !validk_cat //=; 1:smt(valid_cat).  
     inline M.__reduce4. do 2! unroll for ^while. auto => />.
     move => &hr H. rewrite !/trace //= !validk_cat //=. move => H0 H1.
     rewrite !H1 !b2i0 => />. rewrite !valid_cat //=. smt(forall_validk_valid).

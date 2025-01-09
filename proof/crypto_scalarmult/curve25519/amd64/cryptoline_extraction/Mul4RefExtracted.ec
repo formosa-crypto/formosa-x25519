@@ -331,20 +331,20 @@ proof.
     seq 8: (#pre). unroll for ^while.  auto => />.  
     seq 2: (#pre). unroll for ^while.   
     rcondt ^if. auto. rcondf ^if. auto. rcondf ^if. auto. rcondf ^if. auto. auto => />.
-    move => &hr H. rewrite !validk_cat //=; 1..3:smt(@Jcheck @W64 @JUtils). 
+    move => &hr H. rewrite !validk_cat //=; 1..3:smt(Jcheck.valid_cat). 
     seq 2: (#pre). unroll for ^while.   
     seq 3: (#pre). unroll for ^while.   
     rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. 
     rcondf ^if. auto. rcondf ^if. auto. auto => />.  
-    move => &hr H. rewrite !validk_cat //=; 1..7:smt(@Jcheck @W64 @JUtils).
+    move => &hr H. rewrite !validk_cat //=; 1..7:smt(Jcheck.valid_cat).
     seq 3: (#pre). unroll for ^while.   
     rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. 
     rcondf ^if. auto. rcondf ^if. auto. auto => />.
-    move => &hr H. rewrite !validk_cat //=; 1..7:smt(@Jcheck @W64 @JUtils).
+    move => &hr H. rewrite !validk_cat //=; 1..7:smt(Jcheck.valid_cat).
     seq 3: (#pre). unroll for ^while.   
     rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. rcondf ^if. auto. rcondt ^if. auto. 
     rcondf ^if. auto. rcondf ^if. auto. auto => />.
-    move => &hr H. rewrite !validk_cat //=; 1..7:smt(@Jcheck @W64 @JUtils).
+    move => &hr H. rewrite !validk_cat //=; 1..7:smt(Jcheck.valid_cat).
     auto. inline M.__reduce4. 
     do 2! unroll for ^while. 
     auto => />.

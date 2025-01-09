@@ -140,9 +140,9 @@ proof.
     proc. 
     wp -1 => /=. do 2! unroll for ^while. wp; skip => />. move => H. 
     do split. by rewrite H. move => H1. 
-    do split. rewrite H. smt(@W64 @JUtils). move => H2. 
-    do split. rewrite H2. smt(@W64 @JUtils). move => H3.
-    smt(@W64 @JUtils).
+    do split. rewrite H. smt(JUtils.pow2_64 W64.to_uint_small). move => H2. 
+    do split. rewrite H2. smt(JUtils.pow2_64 W64.to_uint_small). move => H3.
+    smt(JUtils.pow2_64 W64.to_uint_small).
 qed.
 
 lemma __sub4_rrs_assume _f _gs :

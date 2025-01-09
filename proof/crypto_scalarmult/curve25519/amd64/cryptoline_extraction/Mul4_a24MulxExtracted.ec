@@ -139,7 +139,7 @@ lemma __mul4_a24_rs_assume_ _fs :
       hoare [M.__mul4_a24_rs :
       (_fs = fs) ==> (true => (validk Assume (trace res)))].
 proof.
-    proc. auto => />. smt(@Zp_25519 @JUtils @W64 @Jcheck).
+    proc. auto => />. smt(JUtils.pow2_64 W64.to_uint_small).
 qed.
 
 lemma __mul4_a24_rs_assume _fs :

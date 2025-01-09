@@ -49,5 +49,5 @@ qed.
 lemma valRep4ToPack_xy (x: W256.t, y):
     W256.to_uint x =  valRep4 y => x  = W4u64.pack4 (Array4.to_list y).
     rewrite valRep4ToPack. move => H.
-    smt(@W256).
+    smt(W256.addr0_s W256.ALU.DEC_256_counter).
 qed.

@@ -591,7 +591,7 @@ lemma __reduce4_assume_ _x _r __38 _z _cf _of :
       (true => (validk Assume (trace res)))].
 proof.
     proc. auto => />. move => H H0 H1. 
-    smt(@JUtils @Zp_25519 @Jcheck @W64).
+    smt(JUtils.pow2_64 W64.to_uint_small).
 qed.
 
 lemma __reduce4_assume _x _r __38 _z _cf _of :
