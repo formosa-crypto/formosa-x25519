@@ -358,7 +358,7 @@ qed.
 (** step 2 : decode_u_coordinate **)
 lemma eq_proc_op_decode_u_coordinate u:
   hoare [ CurveProcedures.decode_u_coordinate : u' = u
-          ==> res = inzp (to_uint (spec_decode_u_coordinate u))].
+          ==> res = Zp.inzp (to_uint (spec_decode_u_coordinate u))].
 proof.
   proc; wp. rewrite /spec_decode_u_coordinate /=; skip.
   move => &mu hu; rewrite hu //.
@@ -368,7 +368,7 @@ lemma eq_proc_op_decode_u_coordinate_base:
   hoare[ CurveProcedures.decode_u_coordinate_base:
       true
       ==>
-      res = inzp (to_uint (spec_decode_u_coordinate( W256.of_int 9)))
+      res = Zp.inzp (to_uint (spec_decode_u_coordinate( W256.of_int 9)))
   ].
 proof.
   proc *; inline 1; wp.
@@ -568,7 +568,8 @@ proof.
   call eq_sqr; wp. call eq_sqr; wp. call eq_sqr; wp.
   call eq_sqr; wp. call eq_sqr; wp. call eq_sqr; wp.
   call eq_sqr; wp. call eq_sqr; wp.
-  skip => />. smt().
+  skip => />. move => &2. do split.
+  smt(). smt().
 qed.
 
 
@@ -592,8 +593,8 @@ proof.
   ecall (eq_proc_op_encode_point (x2, z2)). simplify.
   ecall (eq_proc_op_montgomery_ladder u'' k'). simplify. skip.
   move => &1 [H0] [H1] [H2] [H3] [H4] [H5] [H6] H7. split.
-  rewrite H6 => />.
-  move => H8 H9 H10 H11 H12. smt().
+  rewrite H6 => />. rewrite /select_double_from_triple /op_montgomery_ladder3 => />.
+  move => [#] H8 H9 H10 H11. smt().
 qed.
 
 lemma eq_proc_op_scalarmult (k u : W256.t) :

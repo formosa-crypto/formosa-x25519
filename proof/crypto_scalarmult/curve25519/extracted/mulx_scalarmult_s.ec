@@ -4,8 +4,8 @@ from Jasmin require import JModel_x86.
 
 import SLH64.
 
-require import Array4 Array8 Array32.
-require import WArray32 WArray64.
+from JazzEC require import Array4 Array8 Array32.
+from JazzEC require import WArray32 WArray64.
 
 module M = {
   proc __ith_bit (k:W8.t Array32.t, ctr:W64.t) : W64.t = {

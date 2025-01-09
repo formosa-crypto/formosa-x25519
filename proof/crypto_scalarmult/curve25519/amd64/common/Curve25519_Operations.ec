@@ -91,8 +91,8 @@ lemma eq_op_montgomery_ladder1 (init : zp) (k : W256.t) :
   apply foldl_in_eq.
   move => nqs ctr inlist => /=.
   case (spec_ith_bit k ctr).
-      by move => ?; rewrite /spec_swap_tuple /#.
-  by move => ?; rewrite /spec_swap_tuple /#.
+      move => ?. congr. apply eq_op_add_and_double.
+      move => ?. apply eq_op_add_and_double.
  qed.
 
 (* lemma: op_montgomery_ladder1 = op_montgomery_ladder2 *)
@@ -449,7 +449,28 @@ lemma eq_op_invert1 (z1: zp) :
   op_invert1 z1 = op_invert0 z1.
 proof.
  rewrite op_invert1E op_invert0E /= /op_it_sqr /op_sqr /=.
- smt(exprS exprD expE).
+ rewrite !expE 1..5://=. auto => />.
+ rewrite -!ZModpRing.exprS 1..7://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1..6://=. auto => />.
+ rewrite -!ZModpRing.exprS 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1..4://=. auto => />.
+ rewrite !expE 1..4://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1..4://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
+ rewrite !expE 1://=. auto => />.
+ rewrite -!ZModpRing.exprD_nneg 1,2://=. auto => />.
 qed.
 
 (** split invert2 in 3 parts : jump from it_sqr to it_sqr1 **)

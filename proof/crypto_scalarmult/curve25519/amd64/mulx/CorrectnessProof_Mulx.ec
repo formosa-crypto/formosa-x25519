@@ -1,27 +1,38 @@
-require import Real Bool Int IntDiv.
+require import Real Bool Int IntDiv List StdOrder.
 from Jasmin require import JModel.
 
-require import Zp_limbs Zp_25519 Curve25519_Procedures.
-require import CorrectnessProof_Ref4.  
+require import Zp_limbs Zp_25519 Curve25519_Procedures CommonCryptoline.
+require import CorrectnessProof_Ref4 CryptolineEquivs_Mulx.  
+
 
 from JazzEC require import Ref4_scalarmult_s Mulx_scalarmult_s.
 from JazzEC require import Array4 Array32.
 
 import Zp Ring.IntID.
 
-
 abbrev zexp = ZModpRing.exp.
 
 (** hoares, lossless and phoares **)
-lemma h_mul_a24_mulx (_f : zp, _a24: int):
+lemma h_mul_a24_mulx (_f : zp):
   hoare [M.__mul4_a24_rs :
-      inzpRep4 fs = _f /\  _a24 = to_uint a24
+      inzpRep4 fs = _f /\  W64.to_uint a24 = 121665
       ==>
-      inzpRep4 res = _f * inzp _a24
+      inzpRep4 res = _f * inzp 121665
   ].
 proof.
-    proc.
-    admit.
+   exists* fs.
+   elim * => _ff.
+   conseq __mul4_a24_rs_cryptoline_equiv_mulx (: (((fs = _ff)) /\ inzpRep4 _ff = _f) ==> inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
+      121665) (single ((pow 2 255) - 19)))) __mul4_a24_rs_spec.
+      auto => />. move => &1 H. exists(fs{1}). rewrite -H to_uintK //=.
+      rewrite -mul4_a24_equiv_contract. smt(inzpM).
+      proc *. call (__mul4_a24_rs_spec _ff).
+      auto => />.
 qed.
 
 lemma h_mul_rsr_mulx (_f _g: zp):
@@ -31,8 +42,20 @@ lemma h_mul_rsr_mulx (_f _g: zp):
       inzpRep4 res = _f * _g
   ].
 proof.
-    proc.
-    admit.
+    exists* fs, g.
+    elim * => _ff _gg.
+    conseq __mul4_cryptoline_equiv_mulx (: (((fs = _ff) /\ (g = _gg)) /\ inzpRep4 _gg = _g /\ inzpRep4 _ff = _f) ==> inzpRep4 _gg = _g /\ inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _gg.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19)))) __mul4_rsr_spec.
+      smt(). rewrite -mul4_equiv_contract. smt(inzpM).
+      proc *. call (__mul4_rsr_spec _ff _gg).
+      auto => />.
 qed.
 
 lemma h_sqr_rr_mulx (_f: zp):
@@ -42,8 +65,21 @@ lemma h_sqr_rr_mulx (_f: zp):
       inzpRep4 res = ZModpRing.exp _f 2
   ].
 proof.
-    proc.
-    admit.
+    exists* f.
+    elim * => _ff.
+    conseq __sqr4_cryptoline_equiv_mulx (: (((f = _ff))  /\ inzpRep4 _ff = _f) ==> inzpRep4 _ff = _f /\
+      (eqmod
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))) *
+      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _ff.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19)))) __sqr4_rr_spec.
+      smt(). rewrite -sqr4_equiv_contract. move => &1 &2 [#] H [#] H0 H1.
+      rewrite H H1 inzpM -inzpRep4E H0  ZModpRing.expr2 //=.
+      proc *. call (__sqr4_rr_spec _ff).
+      auto => />.
 qed.
 
 lemma ill_mul_a24_mulx : islossless M.__mul4_a24_rs by islossless.
@@ -52,14 +88,14 @@ lemma ill_mul_rsr_mulx : islossless M.__mul4_rsr by islossless.
 
 lemma ill_sqr_rr_mulx : islossless M.__sqr4_rr by islossless.
 
-lemma ph_mul_a24_mulx (_f: zp, _a24: int):
+lemma ph_mul_a24_mulx (_f: zp):
     phoare [M.__mul4_a24_rs :
-      inzpRep4 fs = _f /\  _a24 = to_uint a24
+      inzpRep4 fs = _f /\  W64.to_uint a24 =  121665
       ==>
-      inzpRep4 res = _f * inzp _a24
+      inzpRep4 res = _f * inzp 121665
   ] = 1%r.
 proof.
-    by conseq ill_mul_a24_mulx (h_mul_a24_mulx _f _a24).
+    by conseq ill_mul_a24_mulx (h_mul_a24_mulx _f).
 qed.
 
 lemma ph_mul_rsr_mulx (_f _g : zp):
@@ -112,12 +148,15 @@ qed.
 
 equiv eq_spec_impl_mul_a24_mulx : CurveProcedures.mul_a24 ~ M.__mul4_a24_rs:
    f{1} = inzpRep4 fs{2} /\
-   a24{1} = to_uint a24{2}
+   a24{1} = to_uint a24{2} /\
+   a24{1} = 121665 /\
+   a24{2} = W64.of_int 121665
+
     ==>
    res{1} = inzpRep4 res{2}.
 proof.
     proc *.
-    ecall {2} (ph_mul_a24_mulx (inzpRep4 fs{2}) (to_uint a24{2})).
+    ecall {2} (ph_mul_a24_mulx (inzpRep4 fs{2})).
     inline *; wp; skip => />.
     move => &2 H H0 => />. by rewrite H0.
 qed.
@@ -193,7 +232,10 @@ qed.
 
 equiv eq_spec_impl_mul_a24_ss_mulx : CurveProcedures.mul_a24 ~ M.__mul4_a24_ss:
    f{1} = inzpRep4 fs{2} /\
-   a24{1} = to_uint a24{2}
+   a24{1} = to_uint a24{2} /\
+   a24{1} = 121665 /\
+   a24{2} = W64.of_int 121665
+
     ==>
    res{1} = inzpRep4 res{2}.
 proof.
@@ -344,17 +386,20 @@ proof.
 qed.
 
 (** to bytes **)
-equiv eq_spec_impl_to_bytes_mulx : Ref4_scalarmult_s.M.__tobytes4 ~ Mulx_scalarmult_s.M.__tobytes4 :
+equiv eq_spec_impl_to_bytes_mulx : Mulx_scalarmult_s.M.__tobytes4 ~ Ref4_scalarmult_s.M.__tobytes4:
     ={f} ==> ={res} by sim.
 
-lemma h_to_bytes_mulx r:
-  hoare [M.__tobytes4 :
-      r = f
+lemma h_to_bytes_mulx _f:
+  hoare [Mulx_scalarmult_s.M.__tobytes4 :
+      _f = f
       ==>
-      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 r)))
+      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
   ].
-proof.
-    admit.
+proof.    
+    conseq eq_spec_impl_to_bytes_mulx (: _f = arg  ==>
+      (pack4 (to_list res) = W256.of_int (asint (inzpRep4 _f)))).
+    smt(). smt().
+    proc *. call (h_to_bytes_ref4 _f). auto.    
 qed.
 
 lemma ill_to_bytes_mulx : islossless M.__tobytes4 by islossless.
@@ -636,25 +681,25 @@ proc; simplify.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of to_uintB.
     + rewrite uleE to_uint1. smt(). rewrite -to_uintB. rewrite uleE. smt(W32.to_uint_cmp).
     + rewrite to_uintB. rewrite uleE to_uint1; smt(). rewrite to_uint1.
-    smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.of_intD).
+    smt(W32.to_uint_cmp  W32.to_uint_mod  W32.to_uint0 W32.to_uint1 W32.to_uintD_small  W32.WRingA.addrC  W32.WRingA.addNr W32.WRingA.subrK).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-  smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+  smt(W32.to_uintK W32.of_intD).
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-    smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+    smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
   wp. symmetry. call eq_spec_impl__sqr_rr_mulx. wp. call eq_spec_impl__sqr_rr_mulx. wp.
   symmetry.
   skip => />. move => &1 H.
   do split. smt().
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-    smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+    smt(W32.ge2_modulus W32.of_uintK).
     rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
   rewrite to_uintB. rewrite uleE to_uint1. smt(W32.to_uint_cmp). rewrite to_uint1 //.
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
- smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+ smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
 rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
- smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+ smt(W32.to_uintK W32.of_intD).
   rewrite /DEC_32 /rflags_of_aluop_nocf_w => />. rewrite /ZF_of => *.
-  smt(W32.ge2_modulus W32.of_uintK W32.to_uintK W32.to_uintN W32.of_intD).
+  smt(W32.to_uint0 W32.to_uint1 W32.WRingA.subrK).
 qed.
 
 (*
@@ -748,8 +793,8 @@ proof.
         f{1} = zexp h{2} (exp 2 (counter{2}))).
     wp; skip. auto => />.
     move => &1 &2 H H0 H1.
-    smt( ZModpRing.exprM Ring.IntID.exprN Ring.IntID.exprN1 Ring.IntID.exprD_nneg).
-    wp.
+    do split; 1..4:smt().
+    smt(IntOrder.Domain.exprSr IntOrder.ler_weexpn2r ZModpRing.expr1 ZModpRing.expr_pred ZModpRing.exprMn ZModpRing.exprD_nneg). wp.
     skip => />. move => &1 &2.
     do split. smt(). smt(). smt().
     move => H H1 H2 H3 H4 H5 H6.
