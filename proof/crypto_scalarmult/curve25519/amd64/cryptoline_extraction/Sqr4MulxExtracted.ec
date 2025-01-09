@@ -4,23 +4,23 @@ from Jasmin require import JModel_x86.
 
 import SLH64.
 
-require import Jcheck.
+from Jasmin require import Jcheck.
 
 require import Array4 Array8.
 
 require import WArray32 WArray64.
 
-require import Jcheck Zp_limbs Zp_25519 CommonCryptoline.
+require import Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.
 
 module M = {
-  var tmp__check : to_check
+  var tmp__trace : trace
   var tmp__data___reduce4 : (W64.t Array4.t)
   var tmp____reduce4 : W64.t Array4.t
   var tmp__data___sqr4_rr : (W64.t Array4.t)
   var tmp____sqr4_rr : W64.t Array4.t
   proc __reduce4 (x:W64.t Array4.t, r:W64.t Array4.t, _38:W64.t, z:W64.t,
-                  cf:bool, of_0:bool) : ((W64.t Array4.t) * to_check) = {
+                  cf:bool, of_0:bool) : ((W64.t Array4.t) * trace) = {
     var aux:bool;
     var aux_1:W64.t;
     var aux_0:W64.t;
@@ -34,14 +34,20 @@ module M = {
     var  _2:bool;
     var  _3:bool;
     var  _4:bool;
-    var assume___reduce4:bool;
-    var assert___reduce4:bool;
-    var assume_proof___reduce4:bool;
-    var assert_proof___reduce4:bool;
-    assume___reduce4 <- true;
-    assert___reduce4 <- true;
-    assume_proof___reduce4 <- true;
-    assert_proof___reduce4 <- assert___reduce4;
+    var old_of:bool;
+    var old_cf:bool;
+    var old_z:W64.t;
+    var old__38:W64.t;
+    var old_r:W64.t Array4.t;
+    var old_x:W64.t Array4.t;
+    var trace___reduce4:trace;
+    old_x <- x;
+    old_r <- r;
+    old__38 <- _38;
+    old_z <- z;
+    old_cf <- cf;
+    old_of <- of_0;
+    trace___reduce4 <- [];
     h <- witness;
     h0 <- witness;
     z <- (W64.of_int 0);
@@ -82,22 +88,10 @@ module M = {
     of_0 <- aux;
     h0.[0] <- aux_1;
     ( _0,  _1,  _2,  _3,  _4, lo) <- (IMULri_64 h0.[0] (W64.of_int 38));
-    assert_proof___reduce4 <-
-    (assert_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => (! cf)));
-    assert___reduce4 <- (assert___reduce4 /\ (! cf));
-    assume_proof___reduce4 <-
-    (assume_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => ((b2i cf) = 0)));
-    assume___reduce4 <- (assume___reduce4 /\ ((b2i cf) = 0));
-    assert_proof___reduce4 <-
-    (assert_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => (! of_0)));
-    assert___reduce4 <- (assert___reduce4 /\ (! of_0));
-    assume_proof___reduce4 <-
-    (assume_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => ((b2i of_0) = 0)));
-    assume___reduce4 <- (assume___reduce4 /\ ((b2i of_0) = 0));
+    trace___reduce4 <- (trace___reduce4 ++ [(Assert, (! cf))]);
+    trace___reduce4 <- (trace___reduce4 ++ [(Assume, ((b2i cf) = 0))]);
+    trace___reduce4 <- (trace___reduce4 ++ [(Assert, (! of_0))]);
+    trace___reduce4 <- (trace___reduce4 ++ [(Assume, ((b2i of_0) = 0))]);
     (aux, aux_1) <- (adc_64 h.[0] lo false);
     cf <- aux;
     h.[0] <- aux_1;
@@ -112,42 +106,35 @@ module M = {
     h.[3] <- aux_1;
     carryo <- cf;
     (cf, z) <- (sbb_64 z z cf);
-    assert_proof___reduce4 <-
-    (assert_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => (cf = carryo)));
-    assert___reduce4 <- (assert___reduce4 /\ (cf = carryo));
-    assume_proof___reduce4 <-
-    (assume_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => ((b2i cf) = (b2i carryo))));
-    assume___reduce4 <- (assume___reduce4 /\ ((b2i cf) = (b2i carryo)));
+    trace___reduce4 <- (trace___reduce4 ++ [(Assert, (cf = carryo))]);
+    trace___reduce4 <-
+    (trace___reduce4 ++ [(Assume, ((b2i cf) = (b2i carryo)))]);
     z <- (z `&` (W64.of_int 38));
-    assert_proof___reduce4 <-
-    (assert_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) =>
-    (((! cf) /\ (z = (W64.of_int 0))) \/ (cf /\ (z = (W64.of_int 38))))));
-    assert___reduce4 <-
-    (assert___reduce4 /\
-    (((! cf) /\ (z = (W64.of_int 0))) \/ (cf /\ (z = (W64.of_int 38)))));
-    assume_proof___reduce4 <-
-    (assume_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => ((u64i z) = ((b2i cf) * 38))));
-    assume___reduce4 <- (assume___reduce4 /\ ((u64i z) = ((b2i cf) * 38)));
+    trace___reduce4 <-
+    (trace___reduce4 ++
+    [(Assert,
+     (((! cf) /\ (z = (W64.of_int 0))) \/ (cf /\ (z = (W64.of_int 38)))))]);
+    trace___reduce4 <-
+    (trace___reduce4 ++ [(Assume, ((u64i z) = ((b2i cf) * 38)))]);
     (aux, aux_1) <- (adc_64 h.[0] z false);
     cf <- aux;
     h.[0] <- aux_1;
-    assert_proof___reduce4 <-
-    (assert_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => (! cf)));
-    assert___reduce4 <- (assert___reduce4 /\ (! cf));
-    assume_proof___reduce4 <-
-    (assume_proof___reduce4 /\
-    ((assert___reduce4 /\ assume___reduce4) => ((b2i cf) = 0)));
-    assume___reduce4 <- (assume___reduce4 /\ ((b2i cf) = 0));
-    return (h,
-           (assume___reduce4, assert___reduce4, assume_proof___reduce4,
-           assert_proof___reduce4));
+    trace___reduce4 <- (trace___reduce4 ++ [(Assert, (! cf))]);
+    trace___reduce4 <- (trace___reduce4 ++ [(Assume, ((b2i cf) = 0))]);
+    trace___reduce4 <-
+    (trace___reduce4 ++
+    [(Assert,
+     (eqmod
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i old_x.[ii]))) (iota_ 0 4))) +
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i old_r.[ii])))
+     (iota_ 0 4)))) (single ((pow 2 255) - 19))))]);
+    return (h, trace___reduce4);
   }
-  proc __sqr4_rr (f:W64.t Array4.t) : ((W64.t Array4.t) * to_check) = {
+  proc __sqr4_rr (f:W64.t Array4.t) : ((W64.t Array4.t) * trace) = {
     var aux_1:bool;
     var aux_0:W64.t;
     var aux:W64.t;
@@ -162,14 +149,10 @@ module M = {
     var  _0:bool;
     var  _1:bool;
     var  _2:bool;
-    var assume___sqr4_rr:bool;
-    var assert___sqr4_rr:bool;
-    var assume_proof___sqr4_rr:bool;
-    var assert_proof___sqr4_rr:bool;
-    assume___sqr4_rr <- true;
-    assert___sqr4_rr <- true;
-    assume_proof___sqr4_rr <- true;
-    assert_proof___sqr4_rr <- assert___sqr4_rr;
+    var old_f:W64.t Array4.t;
+    var trace___sqr4_rr:trace;
+    old_f <- f;
+    trace___sqr4_rr <- [];
     h <- witness;
     r <- witness;
     t <- witness;
@@ -228,22 +211,10 @@ module M = {
     (aux_1, aux_0) <- (ADOX_64 r.[2] z of_0);
     of_0 <- aux_1;
     r.[2] <- aux_0;
-    assert_proof___sqr4_rr <-
-    (assert_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => (! cf)));
-    assert___sqr4_rr <- (assert___sqr4_rr /\ (! cf));
-    assume_proof___sqr4_rr <-
-    (assume_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => ((b2i cf) = 0)));
-    assume___sqr4_rr <- (assume___sqr4_rr /\ ((b2i cf) = 0));
-    assert_proof___sqr4_rr <-
-    (assert_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => (! of_0)));
-    assert___sqr4_rr <- (assert___sqr4_rr /\ (! of_0));
-    assume_proof___sqr4_rr <-
-    (assume_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => ((b2i of_0) = 0)));
-    assume___sqr4_rr <- (assume___sqr4_rr /\ ((b2i of_0) = 0));
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assert, (! cf))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assume, ((b2i cf) = 0))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assert, (! of_0))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assume, ((b2i of_0) = 0))]);
     (aux_0, aux) <- (MULX_64 fx fx);
     t.[5] <- aux_0;
     t.[4] <- aux;
@@ -293,192 +264,203 @@ module M = {
     (aux_1, aux_0) <- (ADOX_64 r.[3] z of_0);
     of_0 <- aux_1;
     r.[3] <- aux_0;
-    assert_proof___sqr4_rr <-
-    (assert_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => (! cf)));
-    assert___sqr4_rr <- (assert___sqr4_rr /\ (! cf));
-    assume_proof___sqr4_rr <-
-    (assume_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => ((b2i cf) = 0)));
-    assume___sqr4_rr <- (assume___sqr4_rr /\ ((b2i cf) = 0));
-    assert_proof___sqr4_rr <-
-    (assert_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => (! of_0)));
-    assert___sqr4_rr <- (assert___sqr4_rr /\ (! of_0));
-    assume_proof___sqr4_rr <-
-    (assume_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) => ((b2i of_0) = 0)));
-    assume___sqr4_rr <- (assume___sqr4_rr /\ ((b2i of_0) = 0));
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assert, (! cf))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assume, ((b2i cf) = 0))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assert, (! of_0))]);
+    trace___sqr4_rr <- (trace___sqr4_rr ++ [(Assume, ((b2i of_0) = 0))]);
     _38 <- (W64.of_int 38);
-    (tmp__data___reduce4, tmp__check) <@ __reduce4 (h, r, _38, z, cf, of_0);
+    (tmp__data___reduce4, tmp__trace) <@ __reduce4 (h, r, _38, z, cf, of_0);
     tmp____reduce4 <- tmp__data___reduce4;
-    (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr,
-    assert_proof___sqr4_rr) <-
-    (upd_call
-    (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr,
-    assert_proof___sqr4_rr) tmp__check);
-    assert_proof___sqr4_rr <-
-    (assert_proof___sqr4_rr /\
-    ((assert___sqr4_rr /\ assume___sqr4_rr) =>
-    (eqmod
-    (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-    (map (fun ii => ((pow 2 (64 * ii)) * (u64i tmp____reduce4.[ii])))
-    (iota_ 0 4)))
-    ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4))) +
-    (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-    (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i r.[ii]))) (iota_ 0 4))))
-    (single ((pow 2 255) - 19)))));
-    assert___sqr4_rr <-
-    (assert___sqr4_rr /\
-    (eqmod
-    (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-    (map (fun ii => ((pow 2 (64 * ii)) * (u64i tmp____reduce4.[ii])))
-    (iota_ 0 4)))
-    ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4))) +
-    (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-    (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i r.[ii]))) (iota_ 0 4))))
-    (single ((pow 2 255) - 19))));
+    trace___sqr4_rr <- (trace___sqr4_rr ++ tmp__trace);
+    trace___sqr4_rr <-
+    (trace___sqr4_rr ++
+    [(Assume,
+     (eqmod
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i tmp____reduce4.[ii])))
+     (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4))) +
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i r.[ii]))) (iota_ 0 4))))
+     (single ((pow 2 255) - 19))))]);
     h <- tmp____reduce4;
-    return (h,
-           (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr,
-           assert_proof___sqr4_rr));
+    trace___sqr4_rr <-
+    (trace___sqr4_rr ++
+    [(Assert,
+     (eqmod
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
+     ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i old_f.[ii]))) (iota_ 0 4))) *
+     (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+     (map (fun ii => ((pow 2 (64 * ii)) * (u64i old_f.[ii]))) (iota_ 0 4))))
+     (single ((pow 2 255) - 19))))]);
+    return (h, trace___sqr4_rr);
   }
 }.
 
-(* All assume are valid. *)
+(* The post is in the trace. *)
 
-lemma __reduce4_assume  : hoare [M.__reduce4 : true ==> (assume_proof_ res)].
+lemma __reduce4_valid_post _x _r __38 _z _cf _of :
+      hoare [M.__reduce4 :
+      ((_of = of_0) /\
+      ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) ==>
+      ((valid (trace res)) =>
+      (eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _x.[ii]))) (iota_ 0 4))) +
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i _r.[ii]))) (iota_ 0 4)
+      ))) (single ((pow 2 255) - 19))))].
 proof.
-    proc. 
-    seq 52 : (assume_proof__ (assume___reduce4, assert___reduce4, assume_proof___reduce4, assert_proof___reduce4)). auto => />.
-    seq 23 : (assume_proof__ (assume___reduce4, assert___reduce4, assume_proof___reduce4, assert_proof___reduce4)). auto => />.    
-    move => &hr. smt(@Zp_25519 @W64 @JUtils).
+proc .
+wp -1 => /=. auto => />.
+qed .
+
+lemma __sqr4_rr_valid_post _f :
+      hoare [M.__sqr4_rr :
+      (_f = f) ==>
+      ((valid (trace res)) =>
+      (eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))) *
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))))
+      (single ((pow 2 255) - 19))))].
+proof.
+proc .
+wp -1 => /=.
+conseq (:  _ ==> (_f = old_f)).
+move => ? _ /> 2?.
+rewrite /trace /= valid_cat /valid //=.
+seq 1 : ((_f = old_f)).
+by auto .
+by conseq  />.
+qed .
+
+(* The post is in the trace and all assumes are valid. *)
+
+lemma __reduce4_assume_ _x _r __38 _z _cf _of :
+      hoare [M.__reduce4 :
+      ((_of = of_0) /\
+      ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) ==>
+      (true => (validk Assume (trace res)))].
+proof.
+    proc. auto => />. move => H H0 H1. 
+    smt(@JUtils @Zp_25519 @Jcheck @W64).
+qed.
+
+lemma __reduce4_assume _x _r __38 _z _cf _of :
+      hoare [M.__reduce4 :
+      ((_of = of_0) /\
+      ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) ==>
+      (((valid (trace res)) =>
+       (eqmod
+       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4))
+       )
+       ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _x.[ii]))) (iota_ 0 4))) +
+       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i _r.[ii])))
+       (iota_ 0 4)))) (single ((pow 2 255) - 19)))) /\
+      (true => (validk Assume (trace res))))].
+proof.
+conseq (__reduce4_assume_ _x _r __38 _z _cf _of) (__reduce4_valid_post 
+                                                  _x _r __38 _z _cf _of) 
+       => />.
+qed .
+
+lemma __sqr4_rr_assume_ _f :
+      hoare [M.__sqr4_rr :
+      (_f = f) ==> (true => (validk Assume (trace res)))].
+proof.
+    proc. auto => />.
+    ecall (__reduce4_assume h r _38 z cf of_0).     
+    seq 2: (#pre /\ validk Assume trace___sqr4_rr). auto.
+    seq 62: (#pre). auto => />.
+    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(@JUtils @W64 @Jcheck @Zp_25519).
+    seq 53: (#pre). auto => />.
+    + move => &hr H. rewrite !/trace //= !validk_cat //=; 1,2:smt(@JUtils @W64 @Jcheck @Zp_25519).
     auto => />.
+    move => &hr H H0 H1 H2.
+    rewrite !/trace //= !validk_cat //=; 1:smt(@JUtils @W64 @Jcheck @Zp_25519).
 qed.
 
-lemma __sqr4_rr_assume  : hoare [M.__sqr4_rr : true ==> (assume_proof_ res)].
+lemma __sqr4_rr_assume _f :
+      hoare [M.__sqr4_rr :
+      (_f = f) ==>
+      (((valid (trace res)) =>
+       (eqmod
+       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4))
+       )
+       ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
+        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))) *
+       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))))
+       (single ((pow 2 255) - 19)))) /\
+      (true => (validk Assume (trace res))))].
 proof.
-    proc.
-    wp. call __reduce4_assume. 
-    seq 70 : (assume_proof__ (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr, assert_proof___sqr4_rr)). auto => />. 
-    seq 58 : (assume_proof__ (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr, assert_proof___sqr4_rr)). auto => />. auto => />.
-qed.
+conseq (__sqr4_rr_assume_ _f) (__sqr4_rr_valid_post _f) => />.
+qed .
 
-(* Soundness of assert/assume. *)
+(* All assert are valid. *)
 
-lemma __reduce4_assert_assume_sound  :
-      hoare [M.__reduce4 : true ==> (soundness_ res)].
-proof.
-    proc.
-    seq 52 : (soundness__ (assume___reduce4, assert___reduce4, assume_proof___reduce4, assert_proof___reduce4)). auto => />. smt().
-    seq 23 : (soundness__ (assume___reduce4, assert___reduce4, assume_proof___reduce4, assert_proof___reduce4)). auto => />. smt().
-    auto => />. smt().
-qed.
-
-lemma __sqr4_rr_assert_assume_sound  :
-      hoare [M.__sqr4_rr : true ==> (soundness_ res)].
-proof.
-    proc.
-    wp. call __reduce4_assert_assume_sound.
-     seq 70 : (soundness__ (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr, assert_proof___sqr4_rr)). auto => />. smt().
-    seq 58 : (soundness__ (assume___sqr4_rr, assert___sqr4_rr, assume_proof___sqr4_rr, assert_proof___sqr4_rr)). auto => />. smt().
-    auto => />. smt().
-qed.
-
-(* Lemmas proved by cryptoline. *)
-
-axiom __reduce4_assert _x _r __38 _z _cf _of :
+lemma __reduce4_assert _x _r __38 _z _cf _of :
       hoare [M.__reduce4 :
       (((_of = of_0) /\
        ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) /\
-      true) ==>
-      (_assert_spec res
-      (eqmod
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _x.[ii]))) (iota_ 0 4))) +
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i _r.[ii]))) (iota_ 0 4)
-      ))) (single ((pow 2 255) - 19))))].
+      true) ==> (validk Assert (trace res))].
+proof.
+admitted (* Proven by Cryptoline *).
 
-axiom __sqr4_rr_assert _f :
+lemma __sqr4_rr_assert _f :
       hoare [M.__sqr4_rr :
-      ((_f = f) /\ true) ==>
-      (_assert_spec res
-      (eqmod
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))) *
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))))
-      (single ((pow 2 255) - 19))))].
+      ((_f = f) /\ true) ==> (validk Assert (trace res))].
+proof.
+admitted (* Proven by Cryptoline *).
 
 (* Final specification for the functions. *)
 
-lemma __reduce4_spec  :
-      forall _x _r __38 _z _cf _of,
+lemma __reduce4_spec _x _r __38 _z _cf _of :
       hoare [M.__reduce4 :
       (((_of = of_0) /\
        ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) /\
       true) ==>
       (eqmod
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _x.[ii]))) (iota_ 0 4))) +
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i _r.[ii]))) (iota_ 0 4)
       ))) (single ((pow 2 255) - 19)))].
 proof.
-move => _x _r __38 _z _cf _of.
-have h  :
-     hoare [M.__reduce4 :
-     (((_of = of_0) /\
-      ((_cf = cf) /\ ((_z = z) /\ ((__38 = _38) /\ ((_r = r) /\ (_x = x)))))) /\
-     true) ==>
-     (_spec_soundness res
-     (eqmod
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _x.[ii]))) (iota_ 0 4))) +
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * (ii + 4))) * (u64i _r.[ii]))) (iota_ 0 4))
-     )) (single ((pow 2 255) - 19))))].
-by conseq __reduce4_assume (__reduce4_assert _x _r __38 _z _cf _of).
-conseq h __reduce4_assert_assume_sound => // ; smt ().
+conseq (__reduce4_assume _x _r __38 _z _cf _of) (__reduce4_assert _x 
+                                                 _r __38 _z _cf _of) 
+       => />.
+smt (all_validk_valid).
 qed .
 
-lemma __sqr4_rr_spec  :
-      forall _f,
+lemma __sqr4_rr_spec _f :
       hoare [M.__sqr4_rr :
       ((_f = f) /\ true) ==>
       (eqmod
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-      ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      ((foldr (fun x => (fun (acc:int) => (x + acc))) 0
        (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))) *
-      (foldr (fun x => (fun (acc: int) => (x + acc))) 0
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))))
       (single ((pow 2 255) - 19)))].
 proof.
-move => _f.
-have h  :
-     hoare [M.__sqr4_rr :
-     ((_f = f) /\ true) ==>
-     (_spec_soundness res
-     (eqmod
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
-     ((foldr (fun x => (fun (acc: int) => (x + acc))) 0
-      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))) *
-     (foldr (fun x => (fun (acc: int) => (x + acc))) 0
-     (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4))))
-     (single ((pow 2 255) - 19))))].
-by conseq __sqr4_rr_assume (__sqr4_rr_assert _f).
-conseq h __sqr4_rr_assert_assume_sound => // ; smt ().
+conseq (__sqr4_rr_assume _f) (__sqr4_rr_assert _f) => />.
+smt (all_validk_valid).
 qed .
+

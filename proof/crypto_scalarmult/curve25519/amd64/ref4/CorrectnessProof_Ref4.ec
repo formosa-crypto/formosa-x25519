@@ -1,7 +1,7 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
 require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Sqr4RefExtracted. (* must be in this order so module names do not clash *)
-require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline Jcheck CorrectnessProof_ToBytes.
+require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline CorrectnessProof_ToBytes.
 
 import Zp Ring.IntID.
 
@@ -349,9 +349,8 @@ proof.
     sim. simplify.
     inline __reduce4.
     do 2! unroll for{1} ^while.
-    do 2! unroll for{2} ^while.
-    rcondt{1} 32; 1:auto => />. rcondt{2} 32; 1:auto => />.
-    seq 170 170 : (#pre /\ ={r}). sim. auto => />.
+    do 2! unroll for{2} ^while.    
+    seq 172 172 : (#pre /\ ={r}). sim. auto => />.
     move => &2. apply Array4.ext_eq => i ib. smt(Array4.get_setE).
 qed.
 
@@ -507,6 +506,83 @@ lemma eq_ph_set_last_bit_to_zero64 x:
   ] = 1%r.
 proof.
     by conseq ill_set_last_bit_to_zero64 (eq_set_last_bit_to_zero64_ref4 x).
+qed.
+
+lemma h_to_bytes2_ref4 _f:
+  hoare [M.__tobytes4 :
+      _f = f 
+      ==>
+      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
+  ].
+proof.
+    have E: 0 <= valRep4 _f < W256.modulus. apply valRep4_cmp.
+    have E0: to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = valRep4 _f.
+      + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.     
+    case (0 <= valRep4 _f < p) => C1.      
+    exists* f.
+    elim *=> _ff.
+    conseq __tobytes_cryptoline_equiv_0p_ref4 (: (((f = _ff)) /\  0 <= valRep4 _ff && valRep4 _ff < p /\ _ff = _f) ==>  _ff = _f /\
+      ((eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
+      (single ((pow 2 255) - 19))))) CommonToBytes_0p.__tobytes4_spec; 1:smt().
+    auto => />. move => &2 H. 
+    rewrite tobytes_equiv_contract. smt(). 
+    proc *. call (CommonToBytes_0p.__tobytes4_spec _ff). auto => />.    
+    rewrite pVal. move => H H1.    
+    do split. rewrite ultE E0 of_uintK pmod_small //=. rewrite uleE E0 of_uintK pmod_small //=.
+    
+    case (p <= valRep4 _f < pow 2 255) => C2.      
+    exists* f.
+    elim *=> _ff.
+    conseq __tobytes_cryptoline_equiv_p2_255_ref4 (: (((f = _ff)) /\  p <= valRep4 _ff && valRep4 _ff < pow 2 255 /\ _ff = _f) ==>  _ff = _f /\
+      ((eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
+      (single ((pow 2 255) - 19))))) CommonToBytes_p2_255.__tobytes4_spec; 1:smt(pVal).
+    auto => />. move => &2 H. 
+    rewrite tobytes_equiv_contract. smt(). 
+    proc *. call (CommonToBytes_p2_255.__tobytes4_spec _ff). auto => />.    
+    rewrite pVal. move => H H1.    
+    do split. rewrite ultE E0 of_uintK pmod_small //=. rewrite uleE E0 of_uintK pmod_small //=.
+
+    
+    case (pow 2 255 <= valRep4 _f < 2*p) => C3.      
+    exists* f.
+    elim *=> _ff.
+    conseq __tobytes_cryptoline_equiv_2_2552p_ref4 (: (((f = _ff)) /\  pow 2 255 <= valRep4 _ff && valRep4 _ff < 2*p /\ _ff = _f) ==>  _ff = _f /\
+      ((eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
+      (single ((pow 2 255) - 19))))) CommonToBytes_2_2552p.__tobytes4_spec; 1:smt(pVal).
+    auto => />. move => &2 H. 
+    rewrite tobytes_equiv_contract. smt(). 
+    proc *. call (CommonToBytes_2_2552p.__tobytes4_spec _ff). auto => />.    
+    rewrite pVal. move => H H1.    
+    do split. rewrite ultE E0 of_uintK pmod_small //=. rewrite uleE E0 of_uintK pmod_small //=.
+    
+    case (2*p <= valRep4 _f < pow 2 256) => C4.      
+    exists* f.
+    elim *=> _ff.
+    conseq __tobytes_cryptoline_equiv_2p2_256_ref4 (: (((f = _ff)) /\  2*p <= valRep4 _ff && valRep4 _ff < pow 2 256 /\ _ff = _f) ==>  _ff = _f /\
+      ((eqmod
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
+      (foldr (fun x => (fun (acc:int) => (x + acc))) 0
+      (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
+      (single ((pow 2 255) - 19))))) CommonToBytes_2p2_256.__tobytes4_spec. 
+    move => &1. auto => />. exists(arg{1}). auto => />.           
+    rewrite tobytes_equiv_contract. auto => />. smt().  
+    proc *. call (CommonToBytes_2p2_256.__tobytes4_spec _ff). auto => />.    
+    rewrite pVal. move => H H1.    
+    do split. rewrite !uleE E0 of_uintK pmod_small //=. smt(). 
+    rewrite !uleE E0 of_uintK pmod_small //=. smt().  
 qed.
 
 lemma h_to_bytes_ref4 _f:

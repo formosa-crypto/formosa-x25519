@@ -1,7 +1,7 @@
 require import Real Bool Int IntDiv List StdOrder BitEncoding.
 from Jasmin require import JModel JUtils.
 require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Sqr4RefExtracted. (* must be in this order so module names do not clash *)
-require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline Jcheck.
+require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline.
 
 import Zp Ring.IntID IntOrder BS2Int.
 
