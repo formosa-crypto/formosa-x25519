@@ -138,24 +138,49 @@ proof.
 qed.
 
 lemma tobytes_equiv_contract (h _f: Rep4) :
-      pack4 (to_list _f) = (W256.of_int (asint (inzpRep4 h))) <=>    
+      pack4 (to_list h) = (W256.of_int (asint (inzpRep4 _f))) <=>
+      ((limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3])) \ult
+       (W256.of_int
+       57896044618658097711785492504343953926634992332820282019728792003956564819949
+       )) /\
+      (((W256.of_int 0) \ule
+       (limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3]))) /\
       (eqmod
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i h.[ii]))) (iota_ 0 4)))
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
-      (single ((pow 2 255) - 19))).
+      (single ((pow 2 255) - 19)))).
 proof.    
-    auto => />. do split. move => H. 
+    auto => />.  
     rewrite -!limbs_are_same /idfun.    
     have E: to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = valRep4 _f.
       + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.
     have E0: to_uint (limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3])) = valRep4 h.
-      + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.                            
-    have E1: limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3]) = (of_int (asint (inzpRep4 h)))%W256.
+      + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.           
+    have E1: 0 <= (asint (inzpRep4 _f)) && asint (inzpRep4 _f) < p. smt(ge0_asint gtp_asint).
+    do split. move => H.    
+    have E2: limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3]) = (of_int (asint (inzpRep4 _f)))%W256.
       + move: H. by rewrite/to_list /mkseq -iotaredE => />.
-    have E2: W256.to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = (asint (inzpRep4 h)).
-      rewrite E1. by rewrite to_uint_small; 1:smt(ge0_asint gtp_asint pVal).
-    rewrite -E E2 inzpRep4E inzpK. smt(@IntDiv @Zp_25519 @Zp_limbs @W256).
-    admit.
+    move: H. rewrite /to_list /mkseq -iotaredE //=. move => H.       
+    have E3: W256.to_uint (limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3])) = (asint (inzpRep4 _f)).
+      + rewrite H of_uintK pmod_small //=. smt(ge0_asint gtp_asint pVal).      
+    have E4: W256.to_uint (limbs_4u64 (quad h.[0] h.[1] h.[2] h.[3])) = valRep4 _f %% p.
+        + by rewrite E3 inzpRep4E inzpK.
+    do split.
+    rewrite ultE E2 of_uintK pmod_small //=; 1,2:smt(ge0_asint gtp_asint pVal).
+    rewrite uleE E2 of_uintK pmod_small //=; 1:smt(ge0_asint gtp_asint pVal).
+    rewrite -E0 E2 of_uintK (pmod_small (asint (inzpRep4 _f)) (pow 2 256)) //=.
+    + smt(ge0_asint gtp_asint pVal).
+    move: E3. rewrite !inzpRep4E. move => E3. rewrite inzpK.
+    smt(@Zp_25519).
+    
+    move => H H2.
+    have E2: 0 <= valRep4 h && valRep4 h < p.
+        + rewrite -E0. smt(@W256 @Zp_limbs @Zp_25519).
+    move => H3.  
+    have E3: W256.to_uint (limbs_4u64 (to_list h)) = (asint (inzpRep4 _f)).
+    + rewrite /to_list /mkseq -iotaredE //= E0. rewrite inzpRep4E inzpK.
+    smt(@Zp_25519 @W256 @Zp_limbs @W64 @IntDiv pVal).
+    smt(@Zp_25519 @W256 @Zp_limbs @W64 @IntDiv pVal).
 qed.

@@ -130,9 +130,6 @@ proof. rewrite valRep4E pE /to_list /val_digits /mkseq -iotaredE => />. smt(W64.
 lemma limb4_lt_2_255_cmp r: 0 <= valRep4 r < pow 2 255 => 0 <= (to_uint r.[3]) < pow 2 63.
 proof. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />. smt(W64.to_uint_cmp). qed.
 
-lemma limb4_gtP_cmp r: p < valRep4 r < W64.modulus => pow 2 63 <= (to_uint r.[3]) < W64.modulus.
-proof. rewrite valRep4E pE /to_list /val_digits /mkseq -iotaredE => />. smt(W64.to_uint_cmp). qed.
-
 lemma limb4_geq_2_255_cmp r: pow 2 255 <= valRep4 r < W256.modulus =>
            pow 2 63 <= (to_uint r.[3]) < W64.modulus.
 proof. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
@@ -406,7 +403,7 @@ proof.
     rewrite !addcE !/add_carry !/carry_add !b2i0 => />.
     rewrite !valRep4E !pVal !/to_list !/val_digits !/mkseq -!iotaredE => />.
     rewrite !mulzDr -!mulzA !to_uintD !of_uintK (modz_small 19 (pow 2 64)) 1:/# => />.
-    move: W64.to_uint_cmp limb4_gtP_cmp. smt().
+    move: W64.to_uint_cmp. smt().
 qed.
 
 lemma limb4_add_range_geqP_lt_2_255 r:
@@ -421,7 +418,7 @@ proof.
     rewrite !addcE !/add_carry !/carry_add !b2i0 => />.
     rewrite !valRep4E !pVal !/to_list !/val_digits !/mkseq -!iotaredE => />.
     rewrite !mulzDr -!mulzA !to_uintD !of_uintK (modz_small 19 (pow 2 64)) 1:/# => />.
-    move: W64.to_uint_cmp limb4_gtP_cmp. smt().
+    move: W64.to_uint_cmp. smt().
 qed.
 
 lemma limb4_add_range_geq_2_255_lt_2p r:

@@ -508,7 +508,7 @@ proof.
     by conseq ill_set_last_bit_to_zero64 (eq_set_last_bit_to_zero64_ref4 x).
 qed.
 
-lemma h_to_bytes2_ref4 _f:
+lemma h_to_bytes_ref4 _f:
   hoare [M.__tobytes4 :
       _f = f 
       ==>
@@ -522,12 +522,18 @@ proof.
     exists* f.
     elim *=> _ff.
     conseq __tobytes_cryptoline_equiv_0p_ref4 (: (((f = _ff)) /\  0 <= valRep4 _ff && valRep4 _ff < p /\ _ff = _f) ==>  _ff = _f /\
-      ((eqmod
+      (((limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3])) \ult
+       (W256.of_int
+       57896044618658097711785492504343953926634992332820282019728792003956564819949
+       )) /\
+      (((W256.of_int 0) \ule
+       (limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3]))) /\
+      (eqmod
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
-      (single ((pow 2 255) - 19))))) CommonToBytes_0p.__tobytes4_spec; 1:smt().
+      (single ((pow 2 255) - 19)))))) CommonToBytes_0p.__tobytes4_spec; 1:smt().
     auto => />. move => &2 H. 
     rewrite tobytes_equiv_contract. smt(). 
     proc *. call (CommonToBytes_0p.__tobytes4_spec _ff). auto => />.    
@@ -538,29 +544,40 @@ proof.
     exists* f.
     elim *=> _ff.
     conseq __tobytes_cryptoline_equiv_p2_255_ref4 (: (((f = _ff)) /\  p <= valRep4 _ff && valRep4 _ff < pow 2 255 /\ _ff = _f) ==>  _ff = _f /\
-      ((eqmod
+      (((((limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3])) \ult
+       (W256.of_int
+       57896044618658097711785492504343953926634992332820282019728792003956564819949
+       )) /\
+      (((W256.of_int 0) \ule
+       (limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3]))) /\
+      (eqmod
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
-      (single ((pow 2 255) - 19))))) CommonToBytes_p2_255.__tobytes4_spec; 1:smt(pVal).
+      (single ((pow 2 255) - 19)))))))) CommonToBytes_p2_255.__tobytes4_spec; 1:smt(pVal).
     auto => />. move => &2 H. 
     rewrite tobytes_equiv_contract. smt(). 
     proc *. call (CommonToBytes_p2_255.__tobytes4_spec _ff). auto => />.    
     rewrite pVal. move => H H1.    
     do split. rewrite ultE E0 of_uintK pmod_small //=. rewrite uleE E0 of_uintK pmod_small //=.
 
-    
     case (pow 2 255 <= valRep4 _f < 2*p) => C3.      
     exists* f.
     elim *=> _ff.
     conseq __tobytes_cryptoline_equiv_2_2552p_ref4 (: (((f = _ff)) /\  pow 2 255 <= valRep4 _ff && valRep4 _ff < 2*p /\ _ff = _f) ==>  _ff = _f /\
-      ((eqmod
+      ((((limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3])) \ult
+       (W256.of_int
+       57896044618658097711785492504343953926634992332820282019728792003956564819949
+       )) /\
+      (((W256.of_int 0) \ule
+       (limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3]))) /\
+      (eqmod
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
-      (single ((pow 2 255) - 19))))) CommonToBytes_2_2552p.__tobytes4_spec; 1:smt(pVal).
+      (single ((pow 2 255) - 19))))))) CommonToBytes_2_2552p.__tobytes4_spec; 1:smt(pVal).
     auto => />. move => &2 H. 
     rewrite tobytes_equiv_contract. smt(). 
     proc *. call (CommonToBytes_2_2552p.__tobytes4_spec _ff). auto => />.    
@@ -571,20 +588,27 @@ proof.
     exists* f.
     elim *=> _ff.
     conseq __tobytes_cryptoline_equiv_2p2_256_ref4 (: (((f = _ff)) /\  2*p <= valRep4 _ff && valRep4 _ff < pow 2 256 /\ _ff = _f) ==>  _ff = _f /\
-      ((eqmod
+      ((((limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3])) \ult
+       (W256.of_int
+       57896044618658097711785492504343953926634992332820282019728792003956564819949
+       )) /\
+      (((W256.of_int 0) \ule
+       (limbs_4u64 (quad res.`1.[0] res.`1.[1] res.`1.[2] res.`1.[3]))) /\
+      (eqmod
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i res.`1.[ii]))) (iota_ 0 4)))
       (foldr (fun x => (fun (acc:int) => (x + acc))) 0
       (map (fun ii => ((pow 2 (64 * ii)) * (u64i _f.[ii]))) (iota_ 0 4)))
-      (single ((pow 2 255) - 19))))) CommonToBytes_2p2_256.__tobytes4_spec. 
+      (single ((pow 2 255) - 19))))))) CommonToBytes_2p2_256.__tobytes4_spec. 
     move => &1. auto => />. exists(arg{1}). auto => />.           
-    rewrite tobytes_equiv_contract. auto => />. smt().  
+    rewrite tobytes_equiv_contract. auto => />.   
     proc *. call (CommonToBytes_2p2_256.__tobytes4_spec _ff). auto => />.    
     rewrite pVal. move => H H1.    
     do split. rewrite !uleE E0 of_uintK pmod_small //=. smt(). 
     rewrite !uleE E0 of_uintK pmod_small //=. smt().  
 qed.
 
+(*
 lemma h_to_bytes_ref4 _f:
   hoare [M.__tobytes4 :
       _f = f
@@ -625,7 +649,7 @@ proof.
     rewrite -H1 valRep4ToPack to_uintK //=.
     apply (h_to_bytes_cminus2P _f). smt().
 qed.
-
+*)
 
 lemma ill_to_bytes_ref4 : islossless M.__tobytes4 by islossless.
 
@@ -950,7 +974,7 @@ proc. simplify. wp. sp.
     move => H6 H7 H8 H9. split. split. apply H9. split.
     rewrite to_uintB. rewrite  uleE => />. by smt(). rewrite to_uint1 H0 //.
     split. move: H1. smt(). move: H2. smt(). split. rewrite H0. move => H10.
-    smt(W32.to_uintK_small W32.WRingA.subrK).
+    smt(@W32 W32.WRingA.subrK).
     smt(W32.to_uintK' W32.WRingA.subrr).
     skip. auto => />. wp.
     rewrite /DEC_32 /rflags_of_aluop_nocf_w /ZF_of => /=.
@@ -959,7 +983,7 @@ proc. simplify. wp. sp.
     rewrite to_uintB. rewrite uleE => />. move: H. smt().
     rewrite to_uint1 //. split. move: H0. smt(). move: H. smt().
     split. move => H1.
-    smt(W32.ge2_modulus W32.to_uintK_small W32.WRingA.subrK).
+    smt(W32.ge2_modulus @W32 W32.WRingA.subrK).
     move => H1. move: H. smt().
 qed.
 

@@ -1,4 +1,4 @@
 [general]
 idirs = ../../arrays/
 rdirs = amd64
-
+idirs=Jasmin:/home/joao/Projects/phd/formal-verification/jasminlibs/myjasmin/eclib

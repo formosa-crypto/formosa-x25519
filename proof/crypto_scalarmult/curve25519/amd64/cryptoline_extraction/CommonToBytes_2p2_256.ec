@@ -1,8 +1,8 @@
-require import AllCore IntDiv CoreMap List Distr.
+require import AllCore IntDiv CoreMap List Distr StdOrder.
 
 from Jasmin require import JModel_x86.
 
-import SLH64.
+import SLH64 IntOrder.
 
 from Jasmin require import Jcheck.
 
@@ -159,14 +159,11 @@ proc . auto => />.
 qed .
 
 (* The post is in the trace and all assumes are valid. *)
-lemma limb4_ltP_cmp r: 0 <= valRep4 r < p => 0 <= (to_uint r.[3]) < pow 2 63.
-proof. rewrite valRep4E pE /to_list /val_digits /mkseq -iotaredE => />. smt(W64.to_uint_cmp). qed.
-
-lemma limb4_lt_2_255_cmp r: 0 <= valRep4 r < pow 2 255 => 0 <= (to_uint r.[3]) < pow 2 63.
-proof. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />. smt(W64.to_uint_cmp). qed.
-
-lemma limb4_gtP_cmp r: p < valRep4 r < W64.modulus => pow 2 63 <= (to_uint r.[3]) < W64.modulus.
-proof. rewrite valRep4E pE /to_list /val_digits /mkseq -iotaredE => />. smt(W64.to_uint_cmp). qed.
+lemma limb4_geq2p_cmp r: 2*p <= valRep4 r < W256.modulus =>
+           (to_uint r.[3]) = W64.modulus-1.
+proof. rewrite valRep4E !pE /to_list /val_digits /mkseq -iotaredE => />.
+       move => H H0. move: W64.to_uint_cmp. smt().
+qed.
 
 lemma __tobytes4_assume_ _f :
       hoare [M.__tobytes4 :
@@ -182,14 +179,39 @@ lemma __tobytes4_assume_ _f :
       (validk Assume (trace res)))].
 proof.
     proc. auto => />. 
-    move => H H0 H1. do split. rewrite H1. move: H H0.
+    move => H H0 H1. 
+    do split. rewrite H1.
     have E: to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = valRep4 _f.
-      + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.
-    + rewrite uleE of_uintK pmod_small //=. rewrite !E.  
-    + move: (limb4_gtP_cmp _f). rewrite pVal //=. move => H2 H3 H4.     
-    have F3: _f.[3] = W64.of_int W64.max_uint.
-    case(valRep4 _f = 2*p).  move: H2 pVal. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
-    admit. admit. admit. admit.
+    + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.
+    have E0: 2*p <= valRep4 _f < W256.modulus.
+    + rewrite -E pVal => />. move: H H0. rewrite !uleE. smt().
+    rewrite to_uintB. rewrite uleE of_uintK pmod_small //=. 
+    rewrite limb4_geq2p_cmp. by rewrite E0. auto. rewrite of_uintK //=.
+    move => H2. do split. by rewrite H2. move => H3 H4. do split. 
+    rewrite H4 H2 H1. rewrite to_uintB. rewrite uleE of_uintK pmod_small //=.
+    have E: to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = valRep4 _f.
+    + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.
+    have E0: 2*p <= valRep4 _f < W256.modulus.
+    + rewrite -E pVal => />. move: H H0. rewrite !uleE. smt().
+    rewrite !addcE !/carry_add !b2i0 => />.
+    move: E0 pVal (W64.to_uint_cmp _f.[3]) (limb4_geq2p_cmp _f). rewrite !pVal => />. 
+    move => L L0 L1 L2 L3. 
+    have L4: _f.[3] = W64.of_int 18446744073709551615. smt(@W64).
+    rewrite L4 //=.
+    have ->:  18446744073709551616 <= u64i _f.[0] + 38 = true.
+    + move: L L0. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
+    + move => L L0. move: W64.to_uint_cmp. smt().
+    rewrite !b2i1 => />.
+    have ->:  18446744073709551616 <= u64i _f.[1] + 1 = true.
+    + move: L L0. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
+    + move => L L0. move: W64.to_uint_cmp. smt().
+    rewrite !b2i1 => />.
+    have ->:  18446744073709551616 <= u64i _f.[2] + 1 = true.
+    + move: L L0. rewrite valRep4E /to_list /val_digits /mkseq -iotaredE => />.
+    + move => L L0. move: W64.to_uint_cmp. smt().
+    rewrite !b2i1 => />.
+    rewrite of_uintK pmod_small //=.
+    smt(@W64).
 qed.
 
 lemma __tobytes4_assume _f :
