@@ -1,8 +1,11 @@
-require import Int Ref4_scalarmult_s Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int Sqr4RefExtracted CommonToBytes_0p CommonToBytes_p2_255 CommonToBytes_2p2_256 CommonToBytes_2_2552p.
+require import Int. 
+
+require import Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int Sqr4RefExtracted CommonToBytes_0p CommonToBytes_p2_255 CommonToBytes_2p2_256 CommonToBytes_2_2552p.
 
 from Jasmin require import JWord Jcheck.
 
-require import Array4 Array8.
+from JazzEC require import Array4 Array8.
+from JazzEC require import Ref4_scalarmult_s.
 
 lemma __add4_rrs_cryptoline_equiv_ref4  :
       equiv [Ref4_scalarmult_s.M.__add4_rrs ~ Add4Extracted.M.__add4_rrs : ={f, g} ==> res{1} = res{2}.`1].

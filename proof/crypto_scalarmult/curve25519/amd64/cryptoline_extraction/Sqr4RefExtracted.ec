@@ -6,9 +6,9 @@ import SLH64.
 
 from Jasmin require import Jcheck.
 
-require import Array4 Array5 Array8.
+from JazzEC require import Array4 Array5 Array8.
 
-require import WArray32 WArray40 WArray64.
+from JazzEC require import WArray32 WArray40 WArray64.
 
 require import Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.

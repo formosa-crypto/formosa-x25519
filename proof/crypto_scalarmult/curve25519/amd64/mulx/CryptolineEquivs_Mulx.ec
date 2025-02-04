@@ -1,8 +1,11 @@
-require import Int Mulx_scalarmult_s Mul4_a24MulxExtracted Mul4MulxExtracted Sqr4MulxExtracted.
+require import Int.
+
+require import Mul4_a24MulxExtracted Mul4MulxExtracted Sqr4MulxExtracted.
 
 from Jasmin require import JWord Jcheck.
 
-require import Array8.
+from JazzEC require import Mulx_scalarmult_s.
+from JazzEC require import Array8.
 
 lemma __mul4_a24_rs_cryptoline_equiv_mulx  :
       equiv [Mulx_scalarmult_s.M.__mul4_a24_rs ~ Mul4_a24MulxExtracted.M.__mul4_a24_rs : ={fs} /\ a24{1} = W64.of_int 121665 ==> res{1} = res{2}.`1].

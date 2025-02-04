@@ -1,6 +1,7 @@
 [submodule "submodules/crypto-specs"]
 	path = submodules/crypto-specs
 	url = https://github.com/formosa-crypto/crypto-specs.git
+	branch = bdep
 [submodule "submodules/ssbd-tools"]
 	path = submodules/ssbd-tools
 	url = https://github.com/tyhicks/ssbd-tools.git

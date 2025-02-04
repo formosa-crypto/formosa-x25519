@@ -6,9 +6,9 @@ import SLH64 IntOrder.
 
 from Jasmin require import Jcheck.
 
-require import Array4.
+from JazzEC require import Array4.
 
-require import WArray32.
+from JazzEC require import WArray32.
 
 require import Zp_limbs Zp_25519 CommonCryptoline.
 import Zp_25519 Zp Zp_limbs EClib.

@@ -1,11 +1,14 @@
 require import Real Bool Int IntDiv List StdOrder.
 from Jasmin require import JModel.
-require import  Add4Extracted Sub4Extracted Mul4MulxExtracted Mul4_a24MulxExtracted Sqr4MulxExtracted. (* must be in this order so module names do not clash *)
-require import CorrectnessProof_Ref4 Curve25519_Procedures Ref4_scalarmult_s Mulx_scalarmult_s Zp_limbs Zp_25519 CryptolineEquivs_Mulx CommonCryptoline CorrectnessProof_ToBytes.
 
-import Zp Ring.IntID IntOrder.
+require import Zp_limbs Zp_25519 Curve25519_Procedures CommonCryptoline.
+require import CorrectnessProof_Ref4 CryptolineEquivs_Mulx.  
 
-require import Array4 Array32.
+
+from JazzEC require import Ref4_scalarmult_s Mulx_scalarmult_s.
+from JazzEC require import Array4 Array32.
+
+import Zp Ring.IntID.
 
 abbrev zexp = ZModpRing.exp.
 

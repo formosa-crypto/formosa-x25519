@@ -1,11 +1,14 @@
 require import Real Bool Int IntDiv List.
 from Jasmin require import JModel.
-require import  Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Sqr4RefExtracted. (* must be in this order so module names do not clash *)
-require import Curve25519_Procedures Ref4_scalarmult_s CryptolineEquivs_Ref4 Zp_limbs Zp_25519 CommonCryptoline CorrectnessProof_ToBytes.
+
+require import Curve25519_Procedures Zp_limbs Zp_25519 CommonCryptoline CryptolineEquivs_Ref4.
+require import Add4Extracted Sub4Extracted Mul4RefExtracted Mul4_a24RefExtracted Int Sqr4RefExtracted CommonToBytes_0p CommonToBytes_p2_255 CommonToBytes_2p2_256 CommonToBytes_2_2552p.
+
+from JazzEC require import Ref4_scalarmult_s.
 
 import Zp Ring.IntID.
 
-require import Array4 Array32 WArray32.
+from JazzEC require import WArray32 Array4 Array32.
 
 (** hoares, lossless and phoares **)
 
@@ -349,7 +352,7 @@ proof.
     sim. simplify.
     inline __reduce4.
     do 2! unroll for{1} ^while.
-    do 2! unroll for{2} ^while.    
+    do 2! unroll for{2} ^while.     
     seq 172 172 : (#pre /\ ={r}). sim. auto => />.
     move => &2. apply Array4.ext_eq => i ib. smt(Array4.get_setE).
 qed.
@@ -515,7 +518,9 @@ lemma h_to_bytes_ref4 _f:
       pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
   ].
 proof.
-    have E: 0 <= valRep4 _f < W256.modulus. apply valRep4_cmp.
+    have E: 0 <= valRep4 _f < W256.modulus. 
+    + rewrite !valRep4E !/val_digits !/to_list !/mkseq -!iotaredE => />. 
+    + move: W64.to_uint_cmp. smt().
     have E0: to_uint (limbs_4u64 (quad _f.[0] _f.[1] _f.[2] _f.[3])) = valRep4 _f.
       + by rewrite valRep4ToPack /to_list /mkseq -iotaredE => />.     
     case (0 <= valRep4 _f < p) => C1.      
@@ -607,49 +612,6 @@ proof.
     do split. rewrite !uleE E0 of_uintK pmod_small //=. smt(). 
     rewrite !uleE E0 of_uintK pmod_small //=. smt().  
 qed.
-
-(*
-lemma h_to_bytes_ref4 _f:
-  hoare [M.__tobytes4 :
-      _f = f
-      ==>
-      pack4 (to_list res) = (W256.of_int (asint (inzpRep4 _f)))
-  ].
-proof.
-    have E: 0 <= valRep4 _f < W256.modulus. apply valRep4_cmp.
-    case (0 <= valRep4 _f < p) => C1.
-    conseq equiv_to_bytes (: _f = arg /\ 0 <= valRep4 _f < p ==>
-      (valRep4 res = asint (inzpRep4 _f))).
-    move => &1 [#] H. smt().
-    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
-    rewrite -H1 valRep4ToPack to_uintK //=.
-    apply (h_to_bytes_no_reduction _f).
-
-    case (p <= valRep4 _f < pow 2 255) => C2.
-    conseq equiv_to_bytes (: _f = arg /\ p <= valRep4 _f < pow 2 255 ==>
-      (valRep4 res = asint (inzpRep4 _f))).
-    move => &1 [#] H. exists _f. move: C2. smt().
-    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
-    rewrite -H1 valRep4ToPack to_uintK //=.
-    apply (h_to_bytes_cminusP_part1 _f).
-
-    case (pow 2 255 <= valRep4 _f < 2*p) => C3.
-    conseq equiv_to_bytes (: _f = arg /\ pow 2 255 <= valRep4 _f < 2*p ==>
-      (valRep4 res = asint (inzpRep4 _f))).
-    move => &1 [#] H. exists _f. move: C3. smt().
-    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
-    rewrite -H1 valRep4ToPack to_uintK //=.
-    apply (h_to_bytes_cminusP_part2 _f).
-
-    case (2*p <= valRep4 _f < W256.modulus) => C4.
-    conseq equiv_to_bytes (: _f = arg /\ 2*p <= valRep4 _f < W256.modulus ==>
-      (valRep4 res = asint (inzpRep4 _f))).
-    move => &1 [#] H. exists _f. move: C4. smt().
-    move => &1 &2 [#] H [#] H0.  move: H. rewrite !H0. move => H1.
-    rewrite -H1 valRep4ToPack to_uintK //=.
-    apply (h_to_bytes_cminus2P _f). smt().
-qed.
-*)
 
 lemma ill_to_bytes_ref4 : islossless M.__tobytes4 by islossless.
 
@@ -799,7 +761,7 @@ equiv eq_spec_impl_init_points_ref4 :
         res{1}.`4 = inzpRep4 res{2}.`4.
 proof.
     proc.
-    wp. unroll for{2} ^while. wp. skip. move => &1 &2 H H0 H1 H2 H3 *.
+    wp. unroll for*{2} ^while. wp. skip. move => &1 &2 H H0 H1 H2 H3 H4 H5 H6.
     split; auto => />. rewrite /H4 /H0 /H2 /H3 /Zp.one /set0_64_ /inzpRep4 => />.
         rewrite /valRep4 /to_list /mkseq -iotaredE => />.
     split; auto => />. rewrite /H5  /H0 /H3 /H2 /Zp.zero /set0_64_ /inzpRep4 => />.
@@ -863,12 +825,12 @@ equiv eq_spec_impl_add_and_double_ref4 :
   res{1}.`3 = inzpRep4 res{2}.`3 /\
   res{1}.`4 = inzpRep4 res{2}.`4.
 proof.
-  proc.
+proc => /=;  wp.
   call eq_spec_impl_mul_rss_ref4; wp.
   call eq_spec_impl_mul_sss_ref4; wp.
   call eq_spec_impl_add_sss_ref4; wp.
   call eq_spec_impl_sqr__ss_ref4; wp.
-  call eq_spec_impl_mul_a24_ss_ref4;  wp.
+  call eq_spec_impl_mul_a24_ss_ref4; wp.
   call eq_spec_impl_sqr__ss_ref4; wp.
   call eq_spec_impl_sub_sss_ref4; wp.
   call eq_spec_impl_mul_sss_ref4; wp.
@@ -882,7 +844,7 @@ proof.
   call eq_spec_impl_sub_sss_ref4; wp.
   call eq_spec_impl_add_ssr_ref4; wp.
   call eq_spec_impl_sub_ssr_ref4; wp.
-  done.
+ done.
 qed.
 
 (** step 6 : montgomery_ladder_step **)
@@ -1060,7 +1022,6 @@ proof.
 qed.
 
 (** step 10 : encode point **)
-
 equiv eq_spec_impl_encode_point_ref4 : CurveProcedures.encode_point ~ M.__encode_point4:
     x2{1}                 = inzpRep4 x2{2} /\
     z2{1}                 = inzpRep4 z2r{2}

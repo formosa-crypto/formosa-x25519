@@ -1,11 +1,12 @@
 require import List Int IntDiv Ring.
 
 from Jasmin require import JModel JWord.
-require import Zp_25519 EClib Array4.
+
+require import Zp_25519 EClib.
+
+from JazzEC require import Array4.
 
 import Zp Ring.IntID.
-
-require import Array4.
 
 op val_digits (base: int) (x: int list) =
  foldr (fun w r => w + base * r) 0 x.

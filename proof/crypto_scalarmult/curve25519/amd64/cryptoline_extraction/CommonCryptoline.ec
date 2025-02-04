@@ -7,9 +7,9 @@ import SLH64.
 require import Zp_limbs Zp_25519.
 import Zp_25519 Zp Zp_limbs EClib.
 
-require import WArray32.
+from JazzEC require import WArray32.
 
-require import Array4.
+from JazzEC require import Array4.
 
 
 abbrev u64i x = W64.to_uint x.
